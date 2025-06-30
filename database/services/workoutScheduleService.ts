@@ -1,0 +1,195 @@
+import { executeQuery, getAllRows, getFirstRow } from "../database";
+import {
+  DayOfWeek,
+  DAYS_OF_WEEK,
+  WorkoutWithDay,
+  WorkoutWithExercises,
+} from "../types";
+import { WorkoutService } from "./workoutService";
+
+export interface WorkoutSchedule {
+  id: number;
+  day_of_week: DayOfWeek;
+  workout_id: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateWorkoutSchedule {
+  day_of_week: DayOfWeek;
+  workout_id: number;
+  is_active?: boolean;
+}
+
+export interface WorkoutScheduleWithWorkout extends WorkoutSchedule {
+  workout: WorkoutWithExercises;
+}
+
+export class WorkoutScheduleService {
+  // Set workout for a specific day of the week
+  static async setWorkoutForDayOfWeek(
+    dayOfWeek: DayOfWeek,
+    workoutId: number,
+  ): Promise<void> {
+    // First, remove any existing schedule for this day of week
+    await executeQuery(
+      "UPDATE workout_schedules SET is_active = 0 WHERE day_of_week = ?",
+      [dayOfWeek],
+    );
+
+    // Check if a schedule already exists for this day and workout
+    const existing = await getFirstRow<WorkoutSchedule>(
+      "SELECT * FROM workout_schedules WHERE day_of_week = ? AND workout_id = ?",
+      [dayOfWeek, workoutId],
+    );
+
+    if (existing) {
+      // Reactivate existing schedule
+      await executeQuery(
+        "UPDATE workout_schedules SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [existing.id],
+      );
+    } else {
+      // Create new schedule
+      await executeQuery(
+        `INSERT INTO workout_schedules (day_of_week, workout_id, is_active)
+         VALUES (?, ?, 1)`,
+        [dayOfWeek, workoutId],
+      );
+    }
+  }
+
+  // Remove workout from a specific day of the week
+  static async removeWorkoutFromDayOfWeek(dayOfWeek: DayOfWeek): Promise<void> {
+    await executeQuery(
+      "UPDATE workout_schedules SET is_active = 0 WHERE day_of_week = ?",
+      [dayOfWeek],
+    );
+  }
+
+  // Get workout assigned to a specific day of the week
+  static async getWorkoutForDayOfWeek(
+    dayOfWeek: DayOfWeek,
+  ): Promise<WorkoutWithExercises | null> {
+    const schedule = await getFirstRow<WorkoutSchedule>(
+      "SELECT * FROM workout_schedules WHERE day_of_week = ? AND is_active = 1",
+      [dayOfWeek],
+    );
+
+    if (!schedule) return null;
+
+    return await WorkoutService.getWorkoutWithExercises(schedule.workout_id);
+  }
+
+  // Get all workouts with their assigned days
+  static async getAllWorkoutsWithDays(): Promise<WorkoutWithDay[]> {
+    const workouts = await WorkoutService.getAllWorkouts();
+    const schedules = await getAllRows<WorkoutSchedule>(
+      "SELECT * FROM workout_schedules WHERE is_active = 1",
+    );
+
+    return workouts.map((workout) => {
+      const schedule = schedules.find((s) => s.workout_id === workout.id);
+      return {
+        ...workout,
+        dayOfWeek: schedule?.day_of_week,
+        dayName:
+          schedule?.day_of_week !== undefined
+            ? DAYS_OF_WEEK[schedule.day_of_week]
+            : undefined,
+        isScheduled: !!schedule,
+      };
+    });
+  }
+
+  // Get weekly schedule (all days with assigned workouts)
+  static async getWeeklySchedule(): Promise<{
+    [key in DayOfWeek]?: WorkoutWithExercises;
+  }> {
+    const schedules = await getAllRows<WorkoutSchedule>(
+      "SELECT * FROM workout_schedules WHERE is_active = 1",
+    );
+
+    const weeklySchedule: { [key in DayOfWeek]?: WorkoutWithExercises } = {};
+
+    for (const schedule of schedules) {
+      const workout = await WorkoutService.getWorkoutWithExercises(
+        schedule.workout_id,
+      );
+      if (workout) {
+        weeklySchedule[schedule.day_of_week] = workout;
+      }
+    }
+
+    return weeklySchedule;
+  }
+
+  static async initializeDefault3DaySchedule(): Promise<void> {
+    const workouts = await WorkoutService.getAllWorkouts();
+
+    const defaultDays: DayOfWeek[] = ["Monday", "Wednesday", "Friday"];
+
+    for (let i = 0; i < Math.min(3, workouts.length); i++) {
+      const workoutId = workouts[i]?.id;
+      if (workoutId !== undefined) {
+        await this.setWorkoutForDayOfWeek(defaultDays[i], workoutId!);
+      }
+    }
+  }
+
+  // Get today's workout
+  static async getTodaysWorkout(): Promise<WorkoutWithExercises | null> {
+    const today = DAYS_OF_WEEK[new Date().getDay()];
+    return await this.getWorkoutForDayOfWeek(today);
+  }
+
+  // Get next scheduled workout
+  static async getNextScheduledWorkout(): Promise<{
+    workout: WorkoutWithExercises;
+    dayName: string;
+    daysUntil: number;
+  } | null> {
+    const weeklySchedule = await this.getWeeklySchedule();
+    const todayIndex = new Date().getDay();
+
+    // Look for the next scheduled day starting from tomorrow
+    for (let i = 1; i <= 7; i++) {
+      const checkDay = DAYS_OF_WEEK[(todayIndex + i) % 7];
+      const workout = weeklySchedule[checkDay];
+
+      if (workout) {
+        return {
+          workout,
+          dayName: checkDay,
+          daysUntil: i,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  // Get active schedule
+  static async getActiveSchedule(): Promise<WorkoutScheduleWithWorkout[]> {
+    const schedules = await getAllRows<WorkoutSchedule>(
+      "SELECT * FROM workout_schedules WHERE is_active = 1 ORDER BY day_of_week",
+    );
+
+    const schedulesWithWorkouts: WorkoutScheduleWithWorkout[] = [];
+
+    for (const schedule of schedules) {
+      const workout = await WorkoutService.getWorkoutWithExercises(
+        schedule.workout_id,
+      );
+      if (workout) {
+        schedulesWithWorkouts.push({
+          ...schedule,
+          workout,
+        });
+      }
+    }
+
+    return schedulesWithWorkouts;
+  }
+}
