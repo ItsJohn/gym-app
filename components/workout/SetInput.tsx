@@ -1,7 +1,7 @@
 import { ThemedView } from "@/components/ThemedView";
 import { useCountdown } from "@/hooks";
 import { Exercise } from "@/validation/schemas";
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import FancySelect from "./FancySelect";
 
@@ -31,7 +31,7 @@ export default function SetInput({
     if (exercise.type === "duration" && reps) {
       countdown.reset(reps);
     }
-  }, [reps, exercise.type, countdown]);
+  }, [reps, exercise.type]);
 
   useEffect(() => {
     if (countdown.isFinished) {
