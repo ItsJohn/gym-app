@@ -1,5 +1,4 @@
 import { ThemedText } from "@/components/ThemedText";
-import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
 interface CompleteButtonProps {

@@ -1,10 +1,6 @@
 import { Session } from "@/validation/session";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
-import {
-  ExerciseSet,
-  UpdateExerciseSet,
-  WorkoutSessionWithDetails,
-} from "../types";
+import { ExerciseSet, WorkoutSessionWithDetails } from "../types";
 
 export class SessionService {
   // Create a new workout session
@@ -56,12 +52,21 @@ export class SessionService {
     ]);
   }
 
+  // Helper method to parse exercise sets and convert is_completed to boolean
+  private static parseExerciseSets(sets: any[]): ExerciseSet[] {
+    return sets.map((set) => ({
+      ...set,
+      is_completed: Boolean(set.is_completed),
+    }));
+  }
+
   // Get sets for a session
   static async getSetsBySessionId(sessionId: number): Promise<ExerciseSet[]> {
-    return await getAllRows<ExerciseSet>(
+    const sets = await getAllRows<ExerciseSet>(
       "SELECT * FROM session_set WHERE session_id = ? ORDER BY exercise_id, set_number",
       [sessionId],
     );
+    return this.parseExerciseSets(sets);
   }
 
   // Get sets for a specific exercise in a session
@@ -69,10 +74,11 @@ export class SessionService {
     sessionId: number,
     exerciseId: string,
   ): Promise<ExerciseSet[]> {
-    return await getAllRows<ExerciseSet>(
+    const sets = await getAllRows<ExerciseSet>(
       "SELECT * FROM session_set WHERE session_id = ? AND exercise_id = ? ORDER BY set_number",
       [sessionId, exerciseId],
     );
+    return this.parseExerciseSets(sets);
   }
 
   // Get session with full details (workout info and sets with exercises)
@@ -113,7 +119,7 @@ export class SessionService {
       set_number: row.set_number,
       weight: row.weight,
       reps: row.reps,
-      is_completed: row.is_completed,
+      is_completed: Boolean(row.is_completed),
       completed_at: row.completed_at,
       created_at: row.created_at,
       updated_at: row.updated_at,
@@ -134,7 +140,7 @@ export class SessionService {
     return {
       ...session,
       workout,
-      session_set: setsWithExercises,
+      exercise_sets: setsWithExercises,
     };
   }
 

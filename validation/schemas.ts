@@ -96,7 +96,7 @@ export const SetInputSchema = z.object({
     .number()
     .min(0, "Reps cannot be negative")
     .max(100, "Reps cannot exceed 100"),
-  is_completed: z.boolean().default(false),
+  is_completed: z.coerce.boolean().default(false),
 });
 
 export const SessionNotesSchema = z.string().trim().nullish();

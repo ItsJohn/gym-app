@@ -4,7 +4,7 @@ import { useRestTimer } from "@/hooks";
 import { useSessionSet, useUpdateSessionSet } from "@/hooks/sessionSet";
 import { Exercise } from "@/validation/schemas";
 import { SessionSet } from "@/validation/sessionSets";
-import React, { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import CompleteButton from "./CompleteButton";
 import SetHeader from "./SetHeader";
@@ -61,9 +61,9 @@ export default function SetCard({
     const hasWeight =
       sessionSet?.target.weight && sessionSet?.target.weight > 0;
     const hasReps =
-      sessionSet?.target.reps && Number(sessionSet?.target.reps) > 0;
+      sessionSet?.target.reps && getReps(exercise, sessionSet)! > 0;
     return !!(hasWeight && hasReps);
-  }, [exercise.type, sessionSet]);
+  }, [exercise, sessionSet]);
 
   const handleWeightChange = useCallback(
     (weight: number) => {

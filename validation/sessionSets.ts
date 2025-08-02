@@ -6,7 +6,7 @@ export const SessionSetSchema = z.object({
   session_id: z.number().int().positive(),
   exercise_id: z.string(),
   target: TargetSchema,
-  is_completed: z.boolean().default(false),
+  is_completed: z.coerce.boolean().default(false),
   completed_at: z.string().datetime().nullish(),
   created_at: z.string().datetime().nullish(),
   updated_at: z.string().datetime().nullish(),

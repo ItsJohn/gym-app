@@ -44,9 +44,10 @@ export class SessionSetService {
     if (!set) {
       return undefined;
     }
-    const { target, ...rest } = set;
+    const { target, is_completed, ...rest } = set;
     return {
       ...rest,
+      is_completed: Boolean(is_completed),
       target: target ? JSON.parse(target as string) : null,
     };
   }
