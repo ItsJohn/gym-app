@@ -31,7 +31,7 @@ export default function SetInput({
     if (exercise.type === "duration" && reps) {
       countdown.reset(reps);
     }
-  }, [reps, exercise.type]);
+  }, [reps, exercise.type, countdown]);
 
   useEffect(() => {
     if (countdown.isFinished) {

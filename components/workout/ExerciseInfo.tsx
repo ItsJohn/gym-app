@@ -2,18 +2,18 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Exercise } from "@/validation/schemas";
 import React, { useMemo } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet } from "react-native";
 
 interface ExerciseInfoProps {
   exercise: Exercise;
   numberOfSets: number;
-  onCustomSetsChange: () => void;
+  // onCustomSetsChange: () => void;
 }
 
 export default function ExerciseInfo({
   exercise,
   numberOfSets,
-  onCustomSetsChange,
+  // onCustomSetsChange,
 }: ExerciseInfoProps) {
   const targetText = useMemo(() => {
     switch (exercise.type) {
@@ -38,7 +38,7 @@ export default function ExerciseInfo({
   return (
     <ThemedView style={styles.exerciseInfo}>
       <ThemedText style={styles.targetText}>{targetText}</ThemedText>
-      {canEditSets && (
+      {/* {canEditSets && (
         <TouchableOpacity
           onPress={onCustomSetsChange}
           style={styles.editSetsButton}
@@ -47,7 +47,7 @@ export default function ExerciseInfo({
             {numberOfSets} sets (tap to edit)
           </ThemedText>
         </TouchableOpacity>
-      )}
+      )} */}
     </ThemedView>
   );
 }

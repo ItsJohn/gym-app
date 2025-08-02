@@ -250,7 +250,6 @@ export default {
 // Timer hooks
 export { useCountdown } from "./useCountdown";
 export { useInterval } from "./useInterval";
-export { useMultipleRestTimers } from "./useMultipleRestTimers";
 export { useRestTimer } from "./useRestTimer";
 export { useScrollTimeout } from "./useScrollTimeout";
 export { useTimeout } from "./useTimeout";

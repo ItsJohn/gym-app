@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * @param duration - Rest duration in seconds
  * @returns Object with rest timer state and control functions
  */
-export function useRestTimer(duration: number = 90) {
+export function useRestTimer(duration: number = 60) {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const intervalRef = useRef<number | null>(null);
@@ -16,6 +16,7 @@ export function useRestTimer(duration: number = 90) {
       const restDuration = customDuration ?? duration;
       setTimeRemaining(restDuration);
       setIsActive(true);
+      console.log("adadads");
 
       intervalRef.current = setInterval(() => {
         setTimeRemaining((prev) => {

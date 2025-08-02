@@ -59,3 +59,22 @@ export const useSessionSetByExerciseId = (
       ),
   });
 };
+
+export const useUpdateSessionSet = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionSet: Partial<SessionSet>) =>
+      SessionSetService.updateSessionSet(sessionSet.id!, sessionSet),
+    onSuccess: async (_, variables: Partial<SessionSet>) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: sessionSetKeys.sessionSets(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: sessionSetKeys.sessionSet(variables.id!),
+        }),
+      ]);
+    },
+  });
+};

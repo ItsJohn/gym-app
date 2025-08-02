@@ -56,35 +56,6 @@ export class SessionService {
     ]);
   }
 
-  // Update exercise set
-  static async updateExerciseSet(
-    setId: number,
-    updates: UpdateExerciseSet,
-  ): Promise<void> {
-    const setParts: string[] = [];
-    const values: any[] = [];
-
-    Object.entries(updates).forEach(([key, value]) => {
-      setParts.push(`${key} = ?`);
-      values.push(value);
-    });
-
-    if (setParts.length === 0) return;
-
-    // Add completion timestamp if marking as completed
-    if (updates.is_completed) {
-      setParts.push("completed_at = CURRENT_TIMESTAMP");
-    }
-
-    setParts.push("updated_at = CURRENT_TIMESTAMP");
-    values.push(setId);
-
-    await executeQuery(
-      `UPDATE session_set SET ${setParts.join(", ")} WHERE id = ?`,
-      values,
-    );
-  }
-
   // Get sets for a session
   static async getSetsBySessionId(sessionId: number): Promise<ExerciseSet[]> {
     return await getAllRows<ExerciseSet>(

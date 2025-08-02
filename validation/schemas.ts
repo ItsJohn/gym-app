@@ -6,6 +6,7 @@ export const TargetSchema = z.object({
   per_side: z.string().nullish(),
   duration: z.string().nullish(),
   distance: z.string().nullish(),
+  weight: z.number().nullish(),
 });
 
 export const WorkoutGoalsSchema = z.object({

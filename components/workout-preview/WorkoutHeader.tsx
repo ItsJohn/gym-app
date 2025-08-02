@@ -15,7 +15,9 @@ export default function WorkoutHeader({
 }: WorkoutHeaderProps) {
   return (
     <ThemedView style={styles.titleContainer}>
-      <ThemedText type="title">{title}</ThemedText>
+      <ThemedText type="title" style={styles.title}>
+        {title}
+      </ThemedText>
       {description && (
         <ThemedText style={styles.description}>{description}</ThemedText>
       )}
@@ -27,6 +29,9 @@ const styles = StyleSheet.create({
   titleContainer: {
     alignItems: "center",
     marginBottom: 24,
+  },
+  title: {
+    textAlign: "center",
   },
   description: {
     textAlign: "center",

@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -129,7 +129,7 @@ export default function WorkoutScreen() {
       headerImage={<GymLogo />}
     >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">
+        <ThemedText type="title" style={styles.workoutTitle}>
           {workout?.title || "Workout Session"}
         </ThemedText>
         {workout?.description && (
@@ -172,6 +172,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginBottom: 16,
+  },
+  workoutTitle: {
+    textAlign: "center",
   },
   workoutDescription: {
     fontSize: 16,

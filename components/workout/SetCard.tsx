@@ -1,8 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useRestTimer } from "@/hooks";
+import { useSessionSet, useUpdateSessionSet } from "@/hooks/sessionSet";
 import { Exercise } from "@/validation/schemas";
-import React, { useMemo } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { SessionSet } from "@/validation/sessionSets";
+import React, { useCallback, useMemo } from "react";
+import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import CompleteButton from "./CompleteButton";
 import SetHeader from "./SetHeader";
 import SetInput from "./SetInput";
@@ -10,16 +13,8 @@ import SetInput from "./SetInput";
 interface SetCardProps {
   setNumber: number;
   exercise: Exercise;
-  weight?: number;
-  reps?: number;
-  isCompleted: boolean;
-  isResting?: boolean;
-  restTimeRemaining?: number;
-  onWeightChange: (weight: number) => void;
-  onRepsChange: (reps: number) => void;
-  onComplete: () => void;
-  onSkipRest?: () => void;
   weightUnit?: "kg" | "lbs";
+  sessionSetId: number;
 }
 
 const formatTime = (seconds: number): string => {
@@ -28,51 +23,104 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+const getReps = (
+  exercise: Exercise,
+  sessionSet?: SessionSet,
+): number | undefined => {
+  if (exercise.type === "duration") {
+    return parseInt(
+      sessionSet?.target.duration?.split("-")[0] ??
+        sessionSet?.target.duration ??
+        "30",
+      10,
+    );
+  }
+  if (
+    exercise.type === "reps-sets" ||
+    exercise.type === "reps-per-side" ||
+    exercise.type === "reps"
+  ) {
+    return parseInt(sessionSet?.target.reps || "10", 10);
+  }
+};
+
 export default function SetCard({
   setNumber,
   exercise,
-  weight,
-  reps,
-  isCompleted,
-  isResting = false,
-  restTimeRemaining,
-  onWeightChange,
-  onRepsChange,
-  onComplete,
-  onSkipRest,
+  sessionSetId,
   weightUnit = "kg",
 }: SetCardProps) {
+  const timer = useRestTimer(exercise.rest_seconds ?? undefined);
+  const { mutate: updateSessionSet } = useUpdateSessionSet();
+  const { data: sessionSet } = useSessionSet(sessionSetId);
+
   const isCompleteButtonEnabled = useMemo(() => {
     if (exercise.type === "duration" || exercise.type === "distance") {
       return true;
     }
-    return weight && weight > 0 && reps && reps > 0;
-  }, [exercise.type, weight, reps]);
+    const hasWeight =
+      sessionSet?.target.weight && sessionSet?.target.weight > 0;
+    const hasReps =
+      sessionSet?.target.reps && Number(sessionSet?.target.reps) > 0;
+    return !!(hasWeight && hasReps);
+  }, [exercise.type, sessionSet]);
+
+  const handleWeightChange = useCallback(
+    (weight: number) => {
+      updateSessionSet({
+        ...sessionSet,
+        target: { ...sessionSet?.target, weight },
+      });
+    },
+    [sessionSet, updateSessionSet],
+  );
+
+  const handleRepsChange = useCallback(
+    (reps: number) => {
+      updateSessionSet({
+        ...sessionSet,
+        target: { ...sessionSet?.target, reps: reps.toString() },
+      });
+    },
+    [sessionSet, updateSessionSet],
+  );
+
+  const handleComplete = useCallback(() => {
+    updateSessionSet({ ...sessionSet, is_completed: true });
+    timer.start();
+  }, [sessionSet, updateSessionSet, timer]);
+
+  if (!sessionSet) {
+    return (
+      <ThemedView style={[styles.setContainer, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <ThemedText style={styles.loadingText}>Loading set data...</ThemedText>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView
       style={[
         styles.setContainer,
-        isCompleted && styles.completedSetContainer,
-        isResting && styles.restingSetContainer,
+        sessionSet?.is_completed && styles.completedSetContainer,
+        timer.isActive && styles.restingSetContainer,
       ]}
     >
       <SetHeader setNumber={setNumber} exercise={exercise} />
 
-      {isResting && restTimeRemaining !== undefined ? (
+      {timer.isActive && timer.timeRemaining !== undefined ? (
         <ThemedView style={styles.restContainer}>
           <ThemedText style={styles.restTitle}>Rest Time</ThemedText>
           <ThemedText style={styles.restTimer}>
-            {formatTime(restTimeRemaining)}
+            {formatTime(timer.timeRemaining)}
           </ThemedText>
           <ThemedText style={styles.restMessage}>
             Take a break before your next set
           </ThemedText>
-          {onSkipRest && (
-            <TouchableOpacity style={styles.skipButton} onPress={onSkipRest}>
-              <ThemedText style={styles.skipButtonText}>Skip Rest</ThemedText>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.skipButton} onPress={timer.skip}>
+            <ThemedText style={styles.skipButtonText}>Skip Rest</ThemedText>
+          </TouchableOpacity>
         </ThemedView>
       ) : (
         <ThemedView
@@ -82,19 +130,19 @@ export default function SetCard({
         >
           <SetInput
             exercise={exercise}
-            weight={weight}
-            reps={reps}
-            onComplete={onComplete}
-            onWeightChange={onWeightChange}
-            onRepsChange={onRepsChange}
+            weight={sessionSet?.target.weight ?? undefined}
+            reps={getReps(exercise, sessionSet)}
+            onComplete={handleComplete}
+            onWeightChange={handleWeightChange}
+            onRepsChange={handleRepsChange}
             weightUnit={weightUnit}
           />
 
           <ThemedView style={styles.checkButtonWrapper}>
             <CompleteButton
-              isCompleted={isCompleted}
+              isCompleted={sessionSet.is_completed}
               isEnabled={!!isCompleteButtonEnabled}
-              onComplete={onComplete}
+              onComplete={handleComplete}
             />
           </ThemedView>
         </ThemedView>
@@ -161,5 +209,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#4A90E2",
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 16,
   },
 });

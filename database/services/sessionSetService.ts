@@ -71,4 +71,40 @@ export class SessionSetService {
       .map(this.parseSessionSet)
       .filter((set): set is SessionSetType => set !== undefined);
   }
+
+  static async updateSessionSet(
+    setId: number,
+    updates: Partial<SessionSetType>,
+  ): Promise<void> {
+    const setParts: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(updates).forEach(([key, value]) => {
+      setParts.push(`${key} = ?`);
+      if (key === "target") {
+        values.push(JSON.stringify(value));
+      } else {
+        values.push(value);
+      }
+    });
+
+    if (setParts.length === 0) return;
+
+    if (updates.is_completed) {
+      setParts.push("completed_at = CURRENT_TIMESTAMP");
+    }
+
+    setParts.push("updated_at = CURRENT_TIMESTAMP");
+    values.push(setId);
+
+    console.log(
+      `UPDATE session_set SET ${setParts.join(", ")} WHERE id = ?`,
+      values,
+    );
+
+    await executeQuery(
+      `UPDATE session_set SET ${setParts.join(", ")} WHERE id = ?`,
+      values,
+    );
+  }
 }
