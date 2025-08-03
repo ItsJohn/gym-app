@@ -1,7 +1,7 @@
 ---
 description: Unit test helper for Jest testing with expo-sqlite mocking
 globs: **/*.test.ts
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Unit Test Guidelines

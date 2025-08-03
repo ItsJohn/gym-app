@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
   statsCard: {
     flex: 1,
     minWidth: "45%",
+    maxHeight: 150,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "rgba(74, 144, 226, 0.03)",
     alignItems: "center",
-    minHeight: 100,
+    minHeight: 150,
     justifyContent: "center",
   },
   statsTitle: {

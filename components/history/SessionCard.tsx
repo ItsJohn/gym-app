@@ -2,8 +2,8 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useWorkout } from "@/hooks";
 import { Session } from "@/validation/session";
-
 interface SessionWithTitle extends Session {
   workout_title?: string;
 }
@@ -12,41 +12,40 @@ interface SessionCardProps {
   session: SessionWithTitle;
   onPress: () => void;
 }
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatDuration = (startTime: string, endTime?: string) => {
+  if (!endTime) return "In progress";
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const durationMs = end.getTime() - start.getTime();
+  const minutes = Math.floor(durationMs / (1000 * 60));
+  const hours = Math.floor(minutes / 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes % 60}m`;
+  }
+  return `${minutes}m`;
+};
 
 export function SessionCard({ session, onPress }: SessionCardProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatDuration = (startTime: string, endTime?: string) => {
-    if (!endTime) return "In progress";
-
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const durationMs = end.getTime() - start.getTime();
-    const minutes = Math.floor(durationMs / (1000 * 60));
-    const hours = Math.floor(minutes / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
-    }
-    return `${minutes}m`;
-  };
-
-  const isCompleted = session.is_completed;
+  const { data: workout } = useWorkout(session.workout_id);
 
   return (
     <TouchableOpacity
@@ -59,22 +58,26 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
         <ThemedView style={styles.sessionHeader}>
           <ThemedView style={styles.titleContainer}>
             <ThemedText type="subtitle" style={styles.sessionTitle}>
-              {session.workout_title || "Unknown Workout"}
+              {workout?.title || "Unknown Workout"}
             </ThemedText>
           </ThemedView>
           <ThemedView
             style={[
               styles.statusBadge,
-              isCompleted ? styles.completedBadge : styles.incompleteBadge,
+              session.is_completed
+                ? styles.completedBadge
+                : styles.incompleteBadge,
             ]}
           >
             <ThemedText
               style={[
                 styles.statusText,
-                isCompleted ? styles.completedText : styles.incompleteText,
+                session.is_completed
+                  ? styles.completedText
+                  : styles.incompleteText,
               ]}
             >
-              {isCompleted ? "✓ Completed" : "⏳ In Progress"}
+              {session.is_completed ? "✓ Completed" : "⏳ In Progress"}
             </ThemedText>
           </ThemedView>
         </ThemedView>

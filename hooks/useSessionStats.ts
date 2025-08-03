@@ -14,7 +14,7 @@ interface SessionStats {
   completion_rate: number;
 }
 
-export const useSessionSetStats = (sessionId: number) => {
+export const useSessionStats = (sessionId: number) => {
   const { data: sessionSets } = useSessionSetsBySessionId(sessionId);
   return useQuery({
     queryKey: sessionKeys.sessionStats(sessionId),

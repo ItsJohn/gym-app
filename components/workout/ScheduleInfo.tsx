@@ -1,25 +1,14 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet } from "react-native";
 
-interface ScheduleInfoProps {
-  onManageSchedule: () => void;
-}
-
-export function ScheduleInfo({ onManageSchedule }: ScheduleInfoProps) {
+export function ScheduleInfo() {
   return (
     <ThemedView style={styles.scheduleInfo}>
       <ThemedView style={styles.scheduleHeader}>
         <ThemedText type="subtitle" style={styles.scheduleTitle}>
           Weekly Workout Schedule
         </ThemedText>
-        <TouchableOpacity
-          style={styles.manageScheduleButton}
-          onPress={onManageSchedule}
-        >
-          <ThemedText style={styles.manageScheduleText}>Manage</ThemedText>
-        </TouchableOpacity>
       </ThemedView>
     </ThemedView>
   );

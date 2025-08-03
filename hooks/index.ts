@@ -43,14 +43,6 @@ export const useWorkouts = () => {
   });
 };
 
-export const useActiveWorkouts = () => {
-  return useQuery({
-    queryKey: workoutKeys.list("active"),
-    queryFn: () => WorkoutService.getActiveWorkouts(),
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
 export const useWorkout = (id: number) => {
   return useQuery({
     queryKey: workoutKeys.detail(id),
@@ -217,7 +209,6 @@ export const useWorkoutSchedule = () => {
 export default {
   // Queries
   useWorkouts,
-  useActiveWorkouts,
   useWorkout,
   useWorkoutWithExercises,
   useWorkoutsNeedingRenewal,
@@ -245,6 +236,9 @@ export default {
 export { useCountdown } from "./useCountdown";
 export { useRestTimer } from "./useRestTimer";
 export { useScrollTimeout } from "./useScrollTimeout";
-export { useSessionStats } from "./useSessionSetStats";
+export { useSessionSetStats } from "./useSessionSetStats";
 
 export * from "./service";
+
+export { useLatestWorkoutStats } from "./useLatestWorkoutStats";
+export { useSessionStats } from "./useSessionStats";

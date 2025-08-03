@@ -6,7 +6,6 @@ import GymLogo from "@/components/GymLogo";
 import {
   HomeHeader,
   NextWorkout,
-  QuickActions,
   QuickStats,
   RecentActivity,
 } from "@/components/home";
@@ -80,10 +79,6 @@ export default function HomeScreen() {
     }, [loadHomeData]),
   );
 
-  const handleStartWorkout = useCallback(() => {
-    router.push("/workout");
-  }, []);
-
   const handleManageWorkouts = useCallback(() => {
     router.push("/(tabs)/workouts");
   }, []);
@@ -138,12 +133,6 @@ export default function HomeScreen() {
 
       <RecentActivity
         recentSession={recentSession}
-        onViewHistory={handleViewHistory}
-      />
-
-      <QuickActions
-        onStartWorkout={handleStartWorkout}
-        onManageWorkouts={handleManageWorkouts}
         onViewHistory={handleViewHistory}
       />
 

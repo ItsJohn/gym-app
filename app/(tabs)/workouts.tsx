@@ -175,7 +175,7 @@ export default function WorkoutsScreen() {
             </TouchableOpacity>
           </ThemedView>
 
-          <ScheduleInfo onManageSchedule={handleManageSchedule} />
+          <ScheduleInfo />
 
           {workouts.length === 0 ? (
             <EmptyState />

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { StyleSheet } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -7,100 +6,75 @@ import { StatsSection } from "@/components/history/StatsSection";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useRecentSessions } from "@/hooks";
+import { SessionService } from "@/database/services/sessionService";
+import { useActiveWorkouts, useLatestWorkoutStats } from "@/hooks";
 import { Session } from "@/validation/session";
-import { router, useNavigation } from "expo-router";
-
-interface SessionWithTitle extends Session {
-  workout_title?: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
 
 export default function HistoryScreen() {
-  const { data: sessions, isLoading: isSessionsLoading } =
-    useRecentSessions(100);
-  const [stats, setStats] = useState({
-    totalSessions: 0,
-    completedSessions: 0,
-    totalDuration: 0,
-    averageDuration: 0,
-    totalWorkouts: 0,
-    currentStreak: 0,
-  });
-  const [error, setError] = useState<string | null>(null);
-  const navigation = useNavigation();
+  const { data: workoutStats, isLoading: isStatsLoading } =
+    useLatestWorkoutStats();
+  const { data: activeWorkouts, isLoading: isWorkoutsLoading } =
+    useActiveWorkouts();
 
-  // const loadData = useCallback(async () => {
-  //   try {
-  //     setError(null);
+  // Get sessions from all active workouts
+  const { data: allActiveWorkoutSessions, isLoading: isSessionsLoading } =
+    useQuery({
+      queryKey: ["allActiveWorkoutSessions"],
+      queryFn: async () => {
+        if (!activeWorkouts || activeWorkouts.length === 0) {
+          return [];
+        }
 
-  //     // Calculate stats
-  //     const totalSessions = sessions?.length || 0;
-  //     const completedSessions = sessions?.filter((s) => s.is_completed).length || 0;
+        const allSessions: Session[] = [];
 
-  //     // Calculate total duration from completed sessions
-  //     let totalDurationMs = 0;
-  //     sessions?.forEach((s) => {
-  //       if (s.is_completed && s.completed_at && s.started_at) {
-  //         const start = new Date(s.started_at);
-  //         const end = new Date(s.completed_at);
-  //         totalDurationMs += end.getTime() - start.getTime();
-  //       }
-  //     });
+        for (const workout of activeWorkouts) {
+          if (!workout.id) continue;
 
-  //     const totalDuration = Math.floor(totalDurationMs / (1000 * 60)); // Convert to minutes
-  //     const averageDuration =
-  //       completedSessions > 0
-  //         ? Math.round(totalDuration / completedSessions)
-  //         : 0;
+          try {
+            const workoutSessions = await SessionService.getSessionsByWorkoutId(
+              workout.id,
+            );
+            allSessions.push(...workoutSessions);
+          } catch (error) {
+            console.error(
+              `Error fetching sessions for workout ${workout.id}:`,
+              error,
+            );
+          }
+        }
 
-  //     // Get unique workout count
-  //     const uniqueWorkoutIds = new Set(
-  //       sessions?.map((s) => s.workout_id),
-  //     );
-  //     const totalWorkouts = uniqueWorkoutIds.size;
+        // Sort by most recent first
+        return allSessions.sort((a, b) => {
+          const dateA = a.started_at ? new Date(a.started_at).getTime() : 0;
+          const dateB = b.started_at ? new Date(b.started_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      },
+      enabled: !isWorkoutsLoading && !!activeWorkouts,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    });
 
-  //     // Calculate current streak (simplified - consecutive days with completed sessions)
-  //     let currentStreak = 0;
-  //     // const today = new Date();
-  //     // const completedSessionsByDate = sessions
-  //     //   ?.filter((s) => s.is_completed && s.started_at)
-  //     //   .sort(
-  //     //     (a, b) =>
-  //     //       new Date(b.started_at!).getTime() - new Date(a.started_at!).getTime(),
-  //     //   );
+  // Transform workout stats to match the expected format for StatsSection
+  const stats = {
+    totalSessions: workoutStats?.total_sessions || 0,
+    completedSessions: workoutStats?.completed_sessions || 0,
+    totalDuration: workoutStats?.total_duration || 0,
+    averageDuration: workoutStats?.average_session_duration || 0,
+    totalWorkouts: workoutStats?.total_workouts || 0,
+    currentStreak: 0, // This would need additional logic to calculate
+    // Additional detailed stats
+    totalSets: workoutStats?.total_sets || 0,
+    completedSets: workoutStats?.completed_sets || 0,
+    totalExercises: workoutStats?.total_exercises || 0,
+    totalWeight: workoutStats?.total_weight || 0,
+    totalReps: workoutStats?.total_reps || 0,
+    exercisesCompleted: workoutStats?.exercises_completed || 0,
+    completionRate: workoutStats?.completion_rate || 0,
+  };
 
-  //     // for (let i = 0; i < completedSessionsByDate.length; i++) {
-  //     //   const sessionDate = new Date(completedSessionsByDate[i].started_at!);
-  //     //   const daysDiff = Math.floor(
-  //     //     (today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24),
-  //     //   );
-
-  //     //   if (daysDiff === i) {
-  //     //     currentStreak++;
-  //     //   } else {
-  //     //     break;
-  //     //   }
-  //     // }
-
-  //     setStats({
-  //       totalSessions,
-  //       completedSessions,
-  //       totalDuration,
-  //       averageDuration,
-  //       totalWorkouts,
-  //       currentStreak,
-  //     });
-  //   } catch (err) {
-  //     console.error("Error loading history data:", err);
-  //     setError("Failed to load history data");
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   loadData();
-  // }, [loadData]);
-
-  const handleSessionPress = async (session: SessionWithTitle) => {
+  const handleSessionPress = async (session: Session) => {
     router.push({
       pathname: "/workout",
       params: {
@@ -108,32 +82,9 @@ export default function HistoryScreen() {
         sessionId: session.id?.toString(),
       },
     });
-    //     try {
-    //       if (!session.id) {
-    //         Alert.alert("Error", "Invalid session ID");
-    //         return;
-    //       }
-
-    //       // Get detailed session data including sets
-    //       const sessionSets = await SessionService.getSetsBySessionId(session.id);
-
-    //       Alert.alert(
-    //         "Session Details",
-    //         `Workout: ${session.workout_title || "Unknown"}
-    // Start: ${session.started_at ? new Date(session.started_at).toLocaleString() : "Unknown"}
-    // ${session.completed_at ? `End: ${new Date(session.completed_at).toLocaleString()}` : "Not finished"}
-    // Status: ${session.is_completed ? "Completed" : "In Progress"}
-    // Sets Completed: ${sessionSets.filter((set) => set.is_completed).length}/${sessionSets.length}
-    // ${session.notes ? `Notes: ${session.notes}` : ""}`,
-    //         [{ text: "OK" }],
-    //       );
-    //     } catch (err) {
-    //       console.error("Error loading session details:", err);
-    //       Alert.alert("Error", "Failed to load session details");
-    //     }
   };
 
-  if (isSessionsLoading) {
+  if (isWorkoutsLoading || isStatsLoading || isSessionsLoading) {
     return (
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
@@ -146,23 +97,6 @@ export default function HistoryScreen() {
     );
   }
 
-  if (error) {
-    return (
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-        headerImage={<GymLogo />}
-      >
-        <ThemedView style={styles.container}>
-          <ThemedText type="title">Error</ThemedText>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-          {/* <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-            <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
-          </TouchableOpacity> */}
-        </ThemedView>
-      </ParallaxScrollView>
-    );
-  }
-
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
@@ -170,14 +104,14 @@ export default function HistoryScreen() {
     >
       <ThemedView style={styles.container}>
         <ThemedView style={styles.header}>
-          <ThemedText type="title">Workout History</ThemedText>
+          <ThemedText type="title">Active Workouts History</ThemedText>
         </ThemedView>
 
         <StatsSection stats={stats} />
 
         <SessionsSection
-          sessions={sessions || []}
-          totalWorkouts={8} //stats.totalWorkouts
+          sessions={allActiveWorkoutSessions || []}
+          totalWorkouts={stats.totalWorkouts}
           onSessionPress={handleSessionPress}
         />
       </ThemedView>
@@ -192,11 +126,6 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
-  },
-  errorText: {
-    color: "#ff6b6b",
-    textAlign: "center",
-    marginBottom: 16,
   },
   retryButton: {
     backgroundColor: "rgba(74, 144, 226, 1)",

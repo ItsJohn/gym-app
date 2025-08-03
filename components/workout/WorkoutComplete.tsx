@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useSessionStats } from "@/hooks";
+import { useSessionSetStats } from "@/hooks";
 import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -15,7 +15,7 @@ export default function WorkoutComplete({ onFinish }: WorkoutCompleteProps) {
     sessionId: string;
   }>();
 
-  const { data: sessionStats, isLoading } = useSessionStats(
+  const { data: sessionStats, isLoading } = useSessionSetStats(
     parseInt(sessionId),
   );
 
