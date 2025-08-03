@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, Modal, StyleSheet, TouchableOpacity } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -10,68 +10,23 @@ import { EmptyState } from "@/components/workout/EmptyState";
 import { ScheduleInfo } from "@/components/workout/ScheduleInfo";
 import { WorkoutCard } from "@/components/workout/WorkoutCard";
 import WorkoutScheduleManager from "@/components/workout/WorkoutScheduleManager";
-import { WorkoutScheduleService } from "@/database/services/workoutScheduleService";
-import { WorkoutService } from "@/database/services/workoutService";
-import { WorkoutWithExercises } from "@/database/types";
+import { useDeleteWorkout, useWorkouts } from "@/hooks";
+import { Workout } from "@/validation/schemas";
 
 export default function WorkoutsScreen() {
-  const [workouts, setWorkouts] = useState<WorkoutWithExercises[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showScheduleManager, setShowScheduleManager] = useState(false);
-  const [currentWorkoutDay, setCurrentWorkoutDay] = useState<number>(1);
-  const [nextWorkout, setNextWorkout] = useState<WorkoutWithExercises | null>(
-    null,
-  );
 
-  const loadWorkouts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const allWorkouts = await WorkoutService.getAllWorkouts();
-      const workoutsWithExercises = await Promise.all(
-        allWorkouts.map(async (workout) => {
-          if (!workout.id) return null;
-          const workoutWithExercises =
-            await WorkoutService.getWorkoutWithExercises(workout.id);
-          return workoutWithExercises;
-        }),
-      );
-      setWorkouts(
-        workoutsWithExercises.filter(
-          (w): w is WorkoutWithExercises => w !== null,
-        ),
-      );
+  // Use hooks instead of direct API calls
+  const {
+    data: workouts = [],
+    isLoading,
+    error,
+    refetch: loadWorkouts,
+  } = useWorkouts();
 
-      // Load current workout day and next workout - use day-of-week system
-      const todaysWorkout = await WorkoutScheduleService.getTodaysWorkout();
-      const nextScheduled =
-        await WorkoutScheduleService.getNextScheduledWorkout();
+  const deleteWorkoutMutation = useDeleteWorkout();
 
-      if (todaysWorkout) {
-        setNextWorkout(todaysWorkout);
-        setCurrentWorkoutDay(new Date().getDay() || 7); // Use day of week (1-7)
-      } else if (nextScheduled) {
-        setNextWorkout(nextScheduled.workout);
-        setCurrentWorkoutDay(nextScheduled.daysUntil);
-      } else {
-        // No schedule set up
-        setNextWorkout(null);
-        setCurrentWorkoutDay(1);
-      }
-    } catch (err) {
-      console.error("Error loading workouts:", err);
-      setError("Failed to load workouts");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadWorkouts();
-  }, [loadWorkouts]);
-
-  const handleStartWorkout = useCallback((workout: WorkoutWithExercises) => {
+  const handleStartWorkout = useCallback((workout: Workout) => {
     if (!workout.id) return;
     router.push({
       pathname: "/workout-preview",
@@ -79,13 +34,13 @@ export default function WorkoutsScreen() {
     });
   }, []);
 
-  const handleEditWorkout = useCallback((workout: WorkoutWithExercises) => {
+  const handleEditWorkout = useCallback((workout: Workout) => {
     if (!workout.id) return;
     router.push(`/workout-editor?id=${workout.id}`);
   }, []);
 
   const handleDeleteWorkout = useCallback(
-    (workout: WorkoutWithExercises) => {
+    (workout: Workout) => {
       if (!workout.id) return;
       Alert.alert(
         "Delete Workout",
@@ -97,8 +52,8 @@ export default function WorkoutsScreen() {
             style: "destructive",
             onPress: async () => {
               try {
-                await WorkoutService.deleteWorkout(workout.id!);
-                await loadWorkouts(); // Refresh the list
+                await deleteWorkoutMutation.mutateAsync(workout.id!);
+                // The mutation will automatically invalidate and refetch the workouts
               } catch (err) {
                 console.error("Error deleting workout:", err);
                 Alert.alert("Error", "Failed to delete workout");
@@ -108,7 +63,7 @@ export default function WorkoutsScreen() {
         ],
       );
     },
-    [loadWorkouts],
+    [deleteWorkoutMutation],
   );
 
   const handleCreateWorkout = useCallback(() => {
@@ -145,8 +100,13 @@ export default function WorkoutsScreen() {
       >
         <ThemedView style={styles.container}>
           <ThemedText type="title">Error</ThemedText>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-          <TouchableOpacity style={styles.retryButton} onPress={loadWorkouts}>
+          <ThemedText style={styles.errorText}>
+            {error instanceof Error ? error.message : "Failed to load workouts"}
+          </ThemedText>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => loadWorkouts()}
+          >
             <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
           </TouchableOpacity>
         </ThemedView>

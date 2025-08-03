@@ -30,7 +30,9 @@ export default function WorkoutEditorScreen() {
   const [generatedWorkouts, setGeneratedWorkouts] = useState<Workout[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [creationMode, setCreationMode] = useState<"manual" | "ai">("ai");
+  const [creationMode, setCreationMode] = useState<"manual" | "ai">(
+    isEditing ? "manual" : "ai",
+  );
   const [editMode, setEditMode] = useState<"single" | "program">("single");
   const { mutate: createExercise, isPending: isCreatingExercise } =
     useCreateExercise();
@@ -113,6 +115,13 @@ export default function WorkoutEditorScreen() {
   );
 
   const handleSave = useCallback(async () => {
+    workout.exercises = workout.exercises.map((exercise) => ({
+      ...exercise,
+      target:
+        typeof exercise.target === "string"
+          ? JSON.parse(exercise.target)
+          : exercise.target,
+    }));
     const validationError = validateWorkoutData(workout!);
     if (validationError) {
       Alert.alert("Validation Error", validationError);
@@ -122,8 +131,9 @@ export default function WorkoutEditorScreen() {
     try {
       setIsSaving(true);
 
-      if (isEditing && id) {
-        await WorkoutService.updateWorkout(parseInt(id), workout!);
+      if (isEditing) {
+        const { exercises, ...rest } = workout!;
+        await WorkoutService.updateWorkout(parseInt(id), rest);
 
         const existingWorkout = await WorkoutService.getWorkoutWithExercises(
           parseInt(id),

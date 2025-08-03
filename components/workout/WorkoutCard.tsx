@@ -1,12 +1,12 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { WorkoutWithExercises } from "@/database/types";
+import { useExercisesByWorkout } from "@/hooks";
+import { Workout } from "@/validation/schemas";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
 interface WorkoutCardProps {
-  workout: WorkoutWithExercises;
+  workout: Workout;
   onPress: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -18,19 +18,7 @@ export function WorkoutCard({
   onEdit,
   onDelete,
 }: WorkoutCardProps) {
-  const avgReps = useMemo(
-    () =>
-      workout.exercises.length > 0
-        ? Math.round(
-            workout.exercises.reduce((sum, ex) => {
-              const reps = parseInt(ex.target?.reps || "0");
-              return sum + reps;
-            }, 0) / workout.exercises.length,
-          )
-        : 0,
-    [workout.exercises],
-  );
-
+  const { data: exercises } = useExercisesByWorkout(workout.id);
   return (
     <TouchableOpacity style={styles.workoutCard} onPress={onPress}>
       <ThemedView style={styles.workoutCardContent}>
@@ -73,7 +61,7 @@ export function WorkoutCard({
         <ThemedView style={styles.workoutStats}>
           <ThemedView style={styles.statItem}>
             <ThemedText style={styles.statNumber}>
-              {workout.exercises.length}
+              {exercises?.length}
             </ThemedText>
             <ThemedText style={styles.statLabel}>Exercises</ThemedText>
           </ThemedView>

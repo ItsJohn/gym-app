@@ -2,6 +2,12 @@ import { Exercise, Workout } from "@/validation/schemas";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
 import { DayOfWeek, DAYS_OF_WEEK, WorkoutWithExercises } from "../types";
 
+// Helper function to convert is_active from number to boolean
+const convertWorkoutToBoolean = (workout: any): Workout => ({
+  ...workout,
+  is_active: workout.is_active === 1 || workout.is_active === true,
+});
+
 export class WorkoutService {
   static async createWorkout(workout: Workout): Promise<number> {
     const result = await executeQuery(
@@ -21,28 +27,33 @@ export class WorkoutService {
   }
 
   static async getAllWorkouts(): Promise<Workout[]> {
-    return await getAllRows<Workout>(
+    const workouts = await getAllRows<Workout>(
       "SELECT * FROM workouts ORDER BY created_at DESC",
     );
+    return workouts.map(convertWorkoutToBoolean);
   }
 
   static async getActiveWorkouts(): Promise<Workout[]> {
-    return await getAllRows<Workout>(
+    const workouts = await getAllRows<Workout>(
       "SELECT * FROM workouts WHERE is_active = 1 ORDER BY created_at DESC",
     );
+    return workouts.map(convertWorkoutToBoolean);
   }
 
   static async getWorkoutById(id: number): Promise<Workout | null> {
-    return await getFirstRow<Workout>("SELECT * FROM workouts WHERE id = ?", [
-      id,
-    ]);
+    const workout = await getFirstRow<Workout>(
+      "SELECT * FROM workouts WHERE id = ?",
+      [id],
+    );
+    return workout ? convertWorkoutToBoolean(workout) : null;
   }
 
   static async getTodaysWorkout(): Promise<Workout | null> {
-    return await getFirstRow<Workout>(
+    const workout = await getFirstRow<Workout>(
       "SELECT * FROM workouts WHERE day_of_week = ? AND is_active = 1",
       [new Date().toLocaleDateString("en-US", { weekday: "long" })],
     );
+    return workout ? convertWorkoutToBoolean(workout) : null;
   }
 
   static async getNextWorkout(): Promise<Workout | undefined> {
@@ -112,12 +123,13 @@ export class WorkoutService {
   }
 
   static async getWorkoutsNeedingRenewal(): Promise<Workout[]> {
-    return await getAllRows<Workout>(
+    const workouts = await getAllRows<Workout>(
       `SELECT * FROM workouts
        WHERE is_active = 1
        AND end_date IS NOT NULL
        AND date(end_date) <= date('now')
        ORDER BY end_date ASC`,
     );
+    return workouts.map(convertWorkoutToBoolean);
   }
 }

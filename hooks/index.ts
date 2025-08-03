@@ -5,7 +5,7 @@ import { WorkoutService } from "@/database/services/workoutService";
 import { UpdateWorkout } from "@/database/types";
 import { Workout } from "@/validation/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMostRecentIncompleteSession, useRecentSessions } from "./service";
+import { useMostRecentIncompleteSession } from "./service";
 
 // Query Keys
 export const workoutKeys = {
@@ -34,45 +34,10 @@ export const workoutKeys = {
     [...workoutKeys.schedule(), "scheduled", "next"] as const,
 };
 
-// Workout Queries
-export const useWorkouts = () => {
-  return useQuery({
-    queryKey: workoutKeys.lists(),
-    queryFn: () => WorkoutService.getAllWorkouts(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-export const useWorkout = (id: number) => {
-  return useQuery({
-    queryKey: workoutKeys.detail(id),
-    queryFn: () => WorkoutService.getWorkoutById(id),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-export const useTodaysWorkout = () => {
-  return useQuery({
-    queryKey: workoutKeys.todaysWorkout(),
-    queryFn: () => WorkoutService.getTodaysWorkout(),
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
 export const useNextWorkout = () => {
   return useQuery({
     queryKey: workoutKeys.nextWorkout(),
     queryFn: () => WorkoutService.getNextWorkout(),
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-export const useWorkoutWithExercises = (id: number) => {
-  return useQuery({
-    queryKey: workoutKeys.withExercises(id),
-    queryFn: () => WorkoutService.getWorkoutWithExercises(id),
-    enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -172,50 +137,13 @@ export const useDeleteWorkout = () => {
   });
 };
 
-// Compound hooks for common use cases
-export const useWorkoutStats = () => {
-  const { data: workouts = [] } = useWorkouts();
-  const { data: recentSessions = [] } = useRecentSessions(10);
-
-  const stats = {
-    totalWorkouts: workouts.length,
-    activeWorkouts: workouts.filter((w) => w.is_active).length,
-    recentSessions: recentSessions.length,
-    completedSessions: recentSessions.filter((s) => s.is_completed).length,
-    thisWeekSessions: recentSessions.filter((s) => {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      return s.started_at ? new Date(s.started_at) >= oneWeekAgo : false;
-    }).length,
-  };
-
-  return stats;
-};
-
-export const useWorkoutSchedule = () => {
-  const todaysWorkout = useTodaysScheduledWorkout();
-  const nextWorkout = useNextScheduledWorkout();
-
-  return {
-    todaysWorkout: todaysWorkout.data,
-    nextWorkout: nextWorkout.data,
-    isLoadingToday: todaysWorkout.isLoading,
-    isLoadingNext: nextWorkout.isLoading,
-    error: todaysWorkout.error || nextWorkout.error,
-  };
-};
-
 // Export all hooks as default for convenience
 export default {
   // Queries
-  useWorkouts,
-  useWorkout,
-  useWorkoutWithExercises,
   useWorkoutsNeedingRenewal,
   useExercisesByWorkout,
   useExercise,
   useSessionDetails,
-  useTodaysWorkout,
   useNextWorkout,
   useMostRecentIncompleteSession,
 
@@ -223,10 +151,6 @@ export default {
   useCreateWorkout,
   useUpdateWorkout,
   useDeleteWorkout,
-
-  // Compound hooks
-  useWorkoutStats,
-  useWorkoutSchedule,
 
   // Query keys for manual cache management
   workoutKeys,
