@@ -28,7 +28,7 @@ describe("SessionService", () => {
 
       expect(result).toBeNull();
       expect(mockGetAllRows).toHaveBeenCalledWith(
-        "SELECT * FROM workout_sessions WHERE is_completed = 0 ORDER BY started_at DESC LIMIT 1",
+        "SELECT * FROM workout_sessions ORDER BY started_at DESC LIMIT 1",
       );
     });
 
@@ -50,7 +50,7 @@ describe("SessionService", () => {
 
       expect(result).toEqual(mockSession);
       expect(mockGetAllRows).toHaveBeenCalledWith(
-        "SELECT * FROM workout_sessions WHERE is_completed = 0 ORDER BY started_at DESC LIMIT 1",
+        "SELECT * FROM workout_sessions ORDER BY started_at DESC LIMIT 1",
       );
     });
 
