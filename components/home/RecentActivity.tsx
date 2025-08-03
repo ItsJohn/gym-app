@@ -1,11 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { WorkoutSession } from "@/database/types";
-import React from "react";
+import { Session } from "@/validation/session";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
 interface RecentActivityProps {
-  recentSession: WorkoutSession | null;
+  recentSession: Session | null;
   onViewHistory: () => void;
 }
 
@@ -27,7 +26,9 @@ export function RecentActivity({
       {recentSession ? (
         <ThemedView style={styles.activityCard}>
           <ThemedText style={styles.activityDate}>
-            {new Date(recentSession.started_at).toLocaleDateString()}
+            {recentSession.started_at
+              ? new Date(recentSession.started_at).toLocaleDateString()
+              : "Unknown date"}
           </ThemedText>
           <ThemedText style={styles.activityStatus}>
             {recentSession.is_completed ? "✅ Completed" : "⏳ In Progress"}

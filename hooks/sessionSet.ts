@@ -6,6 +6,8 @@ import { SessionSet } from "@/validation/sessionSets";
 export const sessionSetKeys = {
   sessionSets: () => ["sessionSets"] as const,
   sessionSet: (id: number) => ["sessionSets", id] as const,
+  sessionSetsBySessionId: (sessionId: number) =>
+    ["sessionSets", "session", sessionId] as const,
   sessionSetByExerciseId: (sessionId: number, exerciseId: string) =>
     ["sessionSets", "session", sessionId, "exercise", exerciseId] as const,
 };
@@ -43,6 +45,13 @@ export const useSessionSet = (id: number) => {
   return useQuery({
     queryKey: sessionSetKeys.sessionSet(id),
     queryFn: () => SessionSetService.getSessionSet(id),
+  });
+};
+
+export const useSessionSetsBySessionId = (sessionId: number) => {
+  return useQuery<SessionSet[]>({
+    queryKey: sessionSetKeys.sessionSetsBySessionId(sessionId),
+    queryFn: () => SessionSetService.getSessionSetsBySessionId(sessionId),
   });
 };
 

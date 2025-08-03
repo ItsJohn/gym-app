@@ -5,6 +5,7 @@ import { WorkoutService } from "@/database/services/workoutService";
 import { UpdateWorkout } from "@/database/types";
 import { Workout } from "@/validation/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMostRecentIncompleteSession, useRecentSessions } from "./session";
 
 // Query Keys
 export const workoutKeys = {
@@ -116,13 +117,6 @@ export const useExercise = (id: string) => {
 };
 
 // Session Queries
-export const useRecentSessions = (limit: number = 10) => {
-  return useQuery({
-    queryKey: workoutKeys.recentSessions(limit),
-    queryFn: () => SessionService.getRecentSessions(limit),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-};
 
 export const useSessionDetails = (id: number) => {
   return useQuery({
@@ -199,7 +193,7 @@ export const useWorkoutStats = () => {
     thisWeekSessions: recentSessions.filter((s) => {
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      return new Date(s.started_at) >= oneWeekAgo;
+      return s.started_at ? new Date(s.started_at) >= oneWeekAgo : false;
     }).length,
   };
 
@@ -229,10 +223,10 @@ export default {
   useWorkoutsNeedingRenewal,
   useExercisesByWorkout,
   useExercise,
-  useRecentSessions,
   useSessionDetails,
   useTodaysWorkout,
   useNextWorkout,
+  useMostRecentIncompleteSession,
 
   // Mutations
   useCreateWorkout,
@@ -248,8 +242,10 @@ export default {
 };
 
 // Timer hooks
+export { useMostRecentIncompleteSession, useRecentSessions } from "./session";
 export { useCountdown } from "./useCountdown";
 export { useInterval } from "./useInterval";
 export { useRestTimer } from "./useRestTimer";
 export { useScrollTimeout } from "./useScrollTimeout";
+export { useSessionStats } from "./useSessionSetStats";
 export { useTimeout } from "./useTimeout";

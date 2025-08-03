@@ -16,7 +16,6 @@ export function useRestTimer(duration: number = 60) {
       const restDuration = customDuration ?? duration;
       setTimeRemaining(restDuration);
       setIsActive(true);
-      console.log("adadads");
 
       intervalRef.current = setInterval(() => {
         setTimeRemaining((prev) => {

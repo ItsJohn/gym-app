@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -82,7 +82,7 @@ export default function WorkoutScreen() {
       );
 
       // Get session stats for the completion message
-      const stats = await SessionService.getSessionStats(sessionId);
+      const stats = await SessionService.getSessionStats(parseInt(sessionId));
 
       Alert.alert(
         "Workout Complete! 🎉",

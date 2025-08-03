@@ -60,6 +60,18 @@ export class SessionSetService {
     return this.parseSessionSet(result!);
   }
 
+  static async getSessionSetsBySessionId(
+    sessionId: number,
+  ): Promise<SessionSetType[]> {
+    const result = await getAllRows<SessionSetType>(
+      `SELECT * FROM session_set WHERE session_id = ? ORDER BY created_at ASC`,
+      [sessionId],
+    );
+    return result
+      .map(this.parseSessionSet)
+      .filter((set): set is SessionSetType => set !== undefined);
+  }
+
   static async getSessionSetsBySessionIdAndExerciseId(
     sessionId: number,
     exerciseId: string,
@@ -97,11 +109,6 @@ export class SessionSetService {
 
     setParts.push("updated_at = CURRENT_TIMESTAMP");
     values.push(setId);
-
-    console.log(
-      `UPDATE session_set SET ${setParts.join(", ")} WHERE id = ?`,
-      values,
-    );
 
     await executeQuery(
       `UPDATE session_set SET ${setParts.join(", ")} WHERE id = ?`,

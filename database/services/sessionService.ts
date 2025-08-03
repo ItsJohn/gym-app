@@ -1,9 +1,8 @@
+import { Exercise, Workout } from "@/validation/schemas";
 import { Session } from "@/validation/session";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
 import { ExerciseSet, WorkoutSessionWithDetails } from "../types";
-
 export class SessionService {
-  // Create a new workout session
   static async createSession(session: Session): Promise<number> {
     const result = await executeQuery(
       `INSERT INTO workout_sessions (workout_id, notes)
@@ -35,7 +34,7 @@ export class SessionService {
   }
 
   static async completeSession(
-    sessionId: number,
+    sessionId: string,
     notes?: string,
   ): Promise<void> {
     await executeQuery(
@@ -86,7 +85,7 @@ export class SessionService {
     sessionId: number,
   ): Promise<WorkoutSessionWithDetails | null> {
     const session = await this.getSessionById(sessionId);
-    if (!session) return null;
+    if (!session || !session.id) return null;
 
     const workout = await getFirstRow<Workout>(
       "SELECT * FROM workouts WHERE id = ?",
@@ -126,19 +125,26 @@ export class SessionService {
       exercise: {
         id: row.exercise_id,
         name: (row as any).exercise_name,
-        target_sets: (row as any).target_sets,
-        target_reps: (row as any).target_reps,
+        type: "reps" as const,
+        target: {
+          reps: (row as any).target_reps?.toString() || null,
+          sets: (row as any).target_sets?.toString() || null,
+        },
         muscle_group: (row as any).muscle_group,
         difficulty: (row as any).difficulty,
         rest_seconds: (row as any).rest_seconds,
         workout_id: session.workout_id,
-        created_at: "",
-        updated_at: "",
       },
     }));
 
     return {
       ...session,
+      id: session.id!, // We already checked that session.id exists above
+      started_at: session.started_at || new Date().toISOString(),
+      created_at: session.created_at || new Date().toISOString(),
+      updated_at: session.updated_at || new Date().toISOString(),
+      completed_at: session.completed_at || undefined,
+      notes: session.notes || undefined,
       workout,
       exercise_sets: setsWithExercises,
     };
@@ -183,5 +189,21 @@ export class SessionService {
     );
 
     return (result?.incomplete_sets || 0) === 0;
+  }
+
+  // Get the most recent incomplete session
+  static async getMostRecentIncompleteSession(): Promise<Session | null> {
+    const sessions = await getAllRows<Session>(
+      "SELECT * FROM workout_sessions ORDER BY started_at DESC LIMIT 1",
+    );
+
+    if (sessions.length === 0) return null;
+
+    const session = sessions[0];
+    if (!session.id) return null;
+
+    if (session.is_completed) return null;
+
+    return session;
   }
 }

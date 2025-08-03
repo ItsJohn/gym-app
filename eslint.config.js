@@ -6,5 +6,10 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ['dist/*'],
+    globals: {
+      'ts-jest': {
+        tsconfig: 'tsconfig.json',
+      },
+    },
   },
 ]);

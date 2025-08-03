@@ -5,6 +5,10 @@ const DATABASE_NAME = "gym_app.db";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
+export const resetDatabase = (): void => {
+  db = null;
+};
+
 export const initializeDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
   if (db) {
     return db;
