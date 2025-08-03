@@ -1,7 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useRestTimer } from "@/hooks";
-import { useSessionSet, useUpdateSessionSet } from "@/hooks/sessionSet";
+import { useRestTimer, useSessionSet, useUpdateSessionSet } from "@/hooks";
 import { Exercise } from "@/validation/schemas";
 import { SessionSet } from "@/validation/sessionSets";
 import { useCallback, useMemo } from "react";

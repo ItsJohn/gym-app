@@ -12,17 +12,17 @@ export const sessionSetKeys = {
     ["sessionSets", "session", sessionId, "exercise", exerciseId] as const,
 };
 
-export const useCreateSessionSet = () => {
-  const queryClient = useQueryClient();
+// export const useCreateSessionSet = () => {
+//   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (sessionSet: SessionSet) =>
-      SessionSetService.createExerciseSet(sessionSet),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sessionSetKeys.sessionSets() });
-    },
-  });
-};
+//   return useMutation({
+//     mutationFn: (sessionSet: SessionSet) =>
+//       SessionSetService.createExerciseSet(sessionSet),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: sessionSetKeys.sessionSets() });
+//     },
+//   });
+// };
 
 export const useInitializeSessionSets = () => {
   const queryClient = useQueryClient();

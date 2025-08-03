@@ -7,7 +7,7 @@ import { StatsSection } from "@/components/history/StatsSection";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useRecentSessions } from "@/hooks/session";
+import { useRecentSessions } from "@/hooks";
 import { Session } from "@/validation/session";
 import { router, useNavigation } from "expo-router";
 

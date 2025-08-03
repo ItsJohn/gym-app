@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, StyleSheet, TouchableOpacity } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -11,7 +11,7 @@ import { ProgramEditor } from "@/components/workout-editor/MultiWorkoutEditor";
 import { ToggleCreationType } from "@/components/workout-editor/ToggleCreationType";
 import { WorkoutForm } from "@/components/workout-editor/WorkoutForm";
 import { WorkoutService } from "@/database/services/workoutService";
-import { useCreateExercise, useDeleteExercise } from "@/hooks/exercise";
+import { useCreateExercise, useDeleteExercise } from "@/hooks";
 import {
   validateExercise,
   validateWorkout,

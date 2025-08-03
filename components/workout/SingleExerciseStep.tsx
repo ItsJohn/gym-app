@@ -1,8 +1,8 @@
 import { ThemedView } from "@/components/ThemedView";
-import { useSessionSetByExerciseId } from "@/hooks/sessionSet";
+import { useSessionSetByExerciseId } from "@/hooks";
 import { Exercise } from "@/validation/schemas";
 import { useLocalSearchParams } from "expo-router";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import ExerciseHeader from "./ExerciseHeader";
 import ExerciseInfo from "./ExerciseInfo";

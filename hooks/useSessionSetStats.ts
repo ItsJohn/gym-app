@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { sessionKeys } from "./session";
-import { useSessionSetsBySessionId } from "./sessionSet";
+import { sessionKeys } from "./service/session";
+import { useSessionSetsBySessionId } from "./service";
 
 interface SessionStats {
   total_sets: number;

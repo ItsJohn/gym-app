@@ -1,10 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
-import { useCreateSession } from "@/hooks/session";
-import { useInitializeSessionSets } from "@/hooks/sessionSet";
+import { useCreateSession, useInitializeSessionSets } from "@/hooks";
 
 export default function StartWorkoutButton() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();

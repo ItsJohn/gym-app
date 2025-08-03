@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { SessionService } from "@/database/services/sessionService";
 import { Session } from "@/validation/session";
-import { useSessionSetsBySessionId } from "./sessionSet";
 
 export const sessionKeys = {
   sessions: () => ["sessions"] as const,
@@ -43,10 +42,10 @@ export const useMostRecentIncompleteSession = () => {
   });
 };
 
-export const useSessionById = (sessionId: number) => {
-  return useQuery({
-    queryKey: sessionKeys.sessionById(sessionId),
-    queryFn: () => SessionService.getSessionById(sessionId),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-};
+// export const useSessionById = (sessionId: number) => {
+//   return useQuery({
+//     queryKey: sessionKeys.sessionById(sessionId),
+//     queryFn: () => SessionService.getSessionById(sessionId),
+//     staleTime: 2 * 60 * 1000, // 2 minutes
+//   });
+// };

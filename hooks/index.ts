@@ -5,7 +5,7 @@ import { WorkoutService } from "@/database/services/workoutService";
 import { UpdateWorkout } from "@/database/types";
 import { Workout } from "@/validation/schemas";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMostRecentIncompleteSession, useRecentSessions } from "./session";
+import { useMostRecentIncompleteSession, useRecentSessions } from "./service";
 
 // Query Keys
 export const workoutKeys = {
@@ -242,10 +242,9 @@ export default {
 };
 
 // Timer hooks
-export { useMostRecentIncompleteSession, useRecentSessions } from "./session";
 export { useCountdown } from "./useCountdown";
-export { useInterval } from "./useInterval";
 export { useRestTimer } from "./useRestTimer";
 export { useScrollTimeout } from "./useScrollTimeout";
 export { useSessionStats } from "./useSessionSetStats";
-export { useTimeout } from "./useTimeout";
+
+export * from "./service";
