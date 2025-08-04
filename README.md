@@ -1,50 +1,148 @@
-# Welcome to your Expo app 👋
+# Gym Sweat & Tears 💪
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A comprehensive fitness tracking app built with React Native and Expo that helps you create, manage, and track your workout routines with AI-powered workout generation.
 
-## Get started
+## Overview
 
-1. Install dependencies
+Gym Sweat & Tears is a modern mobile application designed to streamline your fitness journey. Whether you're a beginner looking to start your fitness journey or an experienced athlete wanting to optimize your training, this app provides the tools you need to achieve your goals.
 
+The app features an intuitive interface for tracking workouts, managing exercise routines, and monitoring your progress over time. With AI-powered workout generation, you can get personalized training programs tailored to your specific goals, experience level, and available equipment.
+
+## Key Features
+
+### 🎯 **AI-Powered Workout Generation**
+- Get personalized workout programs based on your fitness goals
+- Customize training frequency, experience level, and time constraints
+- Receive exercise recommendations with proper form videos
+- Safety-focused modifications for physical limitations
+
+### 📊 **Comprehensive Workout Tracking**
+- Track sets, reps, and rest periods in real-time
+- Monitor workout progress and completion rates
+- View detailed exercise history and performance trends
+- Session management with pause/resume functionality
+
+### 🗓️ **Smart Scheduling System**
+- Schedule workouts for specific days of the week
+- Automatic workout rotation and progression tracking
+- Today's workout recommendations and next workout preview
+- Flexible workout rescheduling
+
+### 📱 **Modern Mobile Experience**
+- Beautiful, responsive UI with dark/light theme support
+- Smooth animations and haptic feedback
+- Offline-first design with local SQLite database
+- Cross-platform compatibility (iOS, Android, Web)
+
+### 📈 **Progress Analytics**
+- Weekly and monthly workout statistics
+- Exercise performance tracking
+- Workout completion rates and consistency metrics
+- Visual progress indicators and achievements
+
+## Tech Stack
+
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router with file-based routing
+- **State Management**: TanStack Query for server state
+- **Database**: SQLite with Expo SQLite
+- **AI Integration**: Google Gemini AI for workout generation
+- **UI Components**: Custom themed components with React Native
+- **Testing**: Jest with React Native Testing Library
+- **Code Quality**: ESLint, Prettier, Husky for git hooks
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (version specified in `.nvmrc`)
+- npm or yarn package manager
+- Expo CLI (`npm install -g @expo/cli`)
+- iOS Simulator (for iOS development) or Android Studio (for Android development)
+
+### Local Development Setup
+
+1. **Clone the repository**
    ```bash
-   npm install
+   git clone <repository-url>
+   cd gym-sweat-tears
    ```
 
-2. Start the app
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
+3. **Start the development server**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run on your preferred platform**
+   - **iOS Simulator**: Press `i` in the terminal or scan the QR code with Expo Go
+   - **Android Emulator**: Press `a` in the terminal
+   - **Web**: Press `w` in the terminal
+   - **Physical Device**: Scan the QR code with the Expo Go app
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Available Scripts
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `npm start` - Start the Expo development server
+- `npm run android` - Start on Android emulator
+- `npm run ios` - Start on iOS simulator
+- `npm run web` - Start on web browser
+- `npm run lint` - Run ESLint for code quality
+- `npm run test` - Run test suite
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Generate test coverage report
+- `npm run format` - Format code with Prettier
 
-## Get a fresh project
+### Environment Setup
 
-When you're ready, run:
+The app uses local SQLite storage, so no additional environment variables are required for basic functionality. However, if you want to use the AI workout generation feature, you'll need to configure the Google Gemini API key in your environment.
 
-```bash
-npm run reset-project
+#### Setting up Gemini API Key
+
+1. **Get a Gemini API Key**:
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign in with your Google account
+   - Create a new API key
+
+2. **Configure the API Key**:
+   - Create a `.env.local` file in the root directory
+   - Add your API key: `EXPO_PUBLIC_GEMINI_API_KEY=your_api_key_here`
+
+**Note**: The AI workout generation feature requires a valid Gemini API key to function. Without it, you can still use all other features of the app including manual workout creation and tracking.
+
+## Project Structure
+
+```
+gym-sweat-tears/
+├── app/                    # Main application screens (file-based routing)
+│   ├── (tabs)/            # Tab navigation screens
+│   ├── workout.tsx        # Active workout session
+│   └── workout-editor.tsx # Workout creation/editing
+├── components/            # Reusable UI components
+├── database/             # SQLite database services and schemas
+├── hooks/                # Custom React hooks
+├── services/             # External service integrations (AI, etc.)
+├── validation/           # Zod validation schemas
+└── constants/            # App constants and configuration
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Contributing
 
-## Learn more
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-To learn more about developing your project with Expo, look at the following resources:
+## License
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**Ready to start your fitness journey?** 🏋️‍♂️ Get started with Gym Sweat & Tears today!
