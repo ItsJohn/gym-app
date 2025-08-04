@@ -1,5 +1,8 @@
 /* eslint-env jest */
 
+// Import jest-dom for DOM matchers
+require('@testing-library/jest-dom');
+
 // Mock expo-sqlite
 jest.mock('expo-sqlite', () => ({
   openDatabaseAsync: jest.fn(),

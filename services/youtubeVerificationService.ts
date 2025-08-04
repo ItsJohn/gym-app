@@ -25,6 +25,26 @@ export class YouTubeVerificationService {
   }
 
   /**
+   * Verifies if a YouTube playlist URL is valid and accessible
+   */
+  static async verifyYouTubePlaylistUrl(url: string): Promise<boolean> {
+    try {
+      // Extract playlist ID from YouTube playlist URL
+      const playlistId = this.extractYouTubePlaylistId(url);
+      if (!playlistId) return false;
+
+      // Use YouTube oEmbed API to verify playlist exists (no API key required)
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=${playlistId}&format=json`;
+
+      const response = await fetch(oembedUrl);
+      return response.ok;
+    } catch (error) {
+      console.error("Error verifying YouTube playlist URL:", url, error);
+      return false;
+    }
+  }
+
+  /**
    * Extracts video ID from various YouTube URL formats
    */
   private static extractYouTubeVideoId(url: string): string | null {
@@ -43,13 +63,31 @@ export class YouTubeVerificationService {
   }
 
   /**
+   * Extracts playlist ID from YouTube playlist URL
+   */
+  private static extractYouTubePlaylistId(url: string): string | null {
+    const patterns = [
+      /youtube\.com\/playlist\?list=([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*list=([^&\n?#]+)/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return null;
+  }
+
+  /**
    * Verifies and removes invalid YouTube URLs in a workout array
    */
   static async verifyAndCleanWorkoutUrls(workouts: any[]): Promise<any[]> {
     for (const workout of workouts) {
       // Verify and remove invalid playlist URL
       if (workout.suggested_playlist) {
-        const isValidPlaylist = await this.verifyYouTubeUrl(
+        const isValidPlaylist = await this.verifyYouTubePlaylistUrl(
           workout.suggested_playlist,
         );
         if (!isValidPlaylist) {

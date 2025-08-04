@@ -127,6 +127,8 @@ IMPORTANT INSTRUCTIONS:
 5. Include proper rest periods between exercises (30-600 seconds)
 6. Provide warnings for any exercises that might aggravate mentioned issues
 7. Give recommendations for progression or modifications
+8. If specific exercises are mentioned in the goals, prioritize including them in the workouts
+9. Adjust the number of exercises and rest periods to fit within the specified time constraints
 
 RESPONSE FORMAT - Return ONLY valid JSON in this exact structure (MUST be an array of ${trainingDays} workout objects):
 [
@@ -174,6 +176,16 @@ EXERCISE GUIDELINES:
 - For beginners: 2-3 sets, 8-12 reps, longer rest
 - For intermediate: 3-4 sets, 8-15 reps, moderate rest
 - For advanced: 3-5 sets, 6-20 reps depending on goals, shorter rest
+- If specific exercises are mentioned in the goals, make sure to include them in appropriate workouts
+- Adjust exercise volume and rest periods to fit within the specified time constraints
+
+TIME MANAGEMENT GUIDELINES:
+- Calculate total workout time: (exercise time + rest time) × number of exercises
+- For ${goals.timeAvailable} minute workouts, plan accordingly:
+  - 30-45 min: 4-6 exercises with shorter rest periods
+  - 45-60 min: 6-8 exercises with moderate rest periods
+  - 60-90 min: 8-10 exercises with standard rest periods
+  - 90+ min: 10+ exercises with longer rest periods
 
 YOUTUBE URL GUIDELINES:
 - For exercise videos: Search for "[Exercise Name] proper form" or "[Exercise Name] technique"

@@ -33,7 +33,7 @@ export function useScrollTimeout(
       timeoutRef.current = setTimeout(() => {
         savedCallback.current();
         timeoutRef.current = null;
-      }, delay) as number;
+      }, delay);
     }
 
     return () => {

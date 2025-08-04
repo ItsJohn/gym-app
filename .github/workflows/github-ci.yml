@@ -21,3 +21,36 @@ jobs:
       if: steps.cache-node_modules.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile
     - run: yarn test
+
+  deploy-staging-android:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🏗 Setup repo
+      uses: actions/checkout@v3
+    - name: 🏗 Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        cache: yarn
+    - name: 🏗 Setup EAS
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        token: ${{ secrets.EXPO_TOKEN }}
+    - uses: actions/cache@v3
+      id: cache-node_modules
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-modules-
+    - name: 📦 Install dependencies
+      if: steps.cache-node_modules.outputs.cache-hit != 'true'
+      run: yarn install --frozen-lockfile
+    - name: 🚀 Build app
+      run: eas build --profile preview --platform android --non-interactive
+      env:
+        EXPO_PROJECT_ID: ${{ secrets.EXPO_PROJECT_ID }}
+        EXPO_PUBLIC_GEMINI_API_KEY: ${{ secrets.EXPO_PUBLIC_GEMINI_API_KEY }}
