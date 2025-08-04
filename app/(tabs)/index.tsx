@@ -12,6 +12,7 @@ import {
 import ContinueWorkoutButton from "@/components/home/ContinueWorkoutButton";
 import SchedulePreview from "@/components/home/SchedulePreview";
 import TodaysWorkoutButton from "@/components/home/TodaysWorkoutButton";
+import { WorkoutCompleteButton } from "@/components/home/WorkoutCompleteButton";
 import { EmptyState } from "@/components/landing/EmptyState";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -22,6 +23,7 @@ import {
   useMostRecentIncompleteSession,
   useNextWorkout,
   useTodaysWorkout,
+  useTodaysWorkoutCompletion,
 } from "@/hooks";
 import { Session } from "@/validation/session";
 
@@ -39,6 +41,10 @@ export default function HomeScreen() {
     useNextWorkout();
   const { data: incompleteSession, isLoading: isIncompleteSessionLoading } =
     useMostRecentIncompleteSession();
+  const {
+    data: todaysWorkoutCompleted,
+    isLoading: isTodaysWorkoutCompletedLoading,
+  } = useTodaysWorkoutCompletion();
 
   const loadHomeData = useCallback(async () => {
     try {
@@ -91,7 +97,8 @@ export default function HomeScreen() {
     isLoading ||
     isTodaysWorkoutLoading ||
     isNextWorkoutLoading ||
-    isIncompleteSessionLoading
+    isIncompleteSessionLoading ||
+    isTodaysWorkoutCompletedLoading
   ) {
     return (
       <ParallaxScrollView
@@ -117,7 +124,9 @@ export default function HomeScreen() {
     >
       <HomeHeader />
 
-      {todaysWorkout ? (
+      {todaysWorkoutCompleted ? (
+        <WorkoutCompleteButton workout={todaysWorkout!} />
+      ) : todaysWorkout ? (
         <TodaysWorkoutButton workout={todaysWorkout!} />
       ) : incompleteSession ? (
         <ContinueWorkoutButton session={incompleteSession} />

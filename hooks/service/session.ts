@@ -17,6 +17,7 @@ export const sessionKeys = {
     [...sessionKeys.sessions(), "byWorkout", workoutId] as const,
   latestWorkoutSessions: () =>
     [...sessionKeys.sessions(), "latestWorkout"] as const,
+  allActiveWorkoutSessions: () => ["allActiveWorkoutSessions"] as const,
 };
 
 export const useCreateSession = () => {
@@ -25,7 +26,11 @@ export const useCreateSession = () => {
   return useMutation({
     mutationFn: (session: Session) => SessionService.createSession(session),
     onSuccess: () => {
+      // Invalidate all session-related queries
       queryClient.invalidateQueries({ queryKey: sessionKeys.sessions() });
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.allActiveWorkoutSessions(),
+      });
     },
   });
 };
@@ -84,5 +89,42 @@ export const useLatestWorkoutSessions = () => {
       );
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+export const useLastSessionDataForExercise = (
+  workoutId: number,
+  exerciseId: string,
+) => {
+  return useQuery({
+    queryKey: [
+      ...sessionKeys.sessions(),
+      "lastSessionData",
+      workoutId,
+      exerciseId,
+    ],
+    queryFn: async () => {
+      return await SessionService.getLastSessionDataForExercise(
+        workoutId,
+        exerciseId,
+      );
+    },
+    enabled: !!workoutId && !!exerciseId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useDeleteSession = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: number) => SessionService.deleteSession(sessionId),
+    onSuccess: () => {
+      // Invalidate all session-related queries
+      queryClient.invalidateQueries({ queryKey: sessionKeys.sessions() });
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.allActiveWorkoutSessions(),
+      });
+    },
   });
 };

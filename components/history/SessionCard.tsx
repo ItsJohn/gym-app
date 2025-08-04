@@ -1,9 +1,11 @@
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { Alert, Modal, StyleSheet, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useWorkout } from "@/hooks";
+import { useDeleteSession, useWorkout } from "@/hooks";
 import { Session } from "@/validation/session";
+import { useState } from "react";
+
 interface SessionWithTitle extends Session {
   workout_title?: string;
 }
@@ -46,21 +48,72 @@ const formatDuration = (startTime: string, endTime?: string) => {
 
 export function SessionCard({ session, onPress }: SessionCardProps) {
   const { data: workout } = useWorkout(session.workout_id);
+  const deleteSessionMutation = useDeleteSession();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleDelete = () => {
+    if (!session.id) return;
+
+    Alert.alert(
+      "Delete Session",
+      `Are you sure you want to delete this session? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteSessionMutation.mutateAsync(session.id!);
+              setShowMenu(false);
+            } catch (err) {
+              console.error("Error deleting session:", err);
+              Alert.alert("Error", "Failed to delete session");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleMenuPress = () => {
+    setShowMenu(true);
+  };
+
+  const handleCloseMenu = () => {
+    setShowMenu(false);
+  };
 
   return (
-    <TouchableOpacity
-      style={styles.sessionCard}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <ThemedView style={styles.sessionCardContent}>
-        {/* Header with workout title and status */}
-        <ThemedView style={styles.sessionHeader}>
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="subtitle" style={styles.sessionTitle}>
-              {workout?.title || "Unknown Workout"}
-            </ThemedText>
+    <>
+      <TouchableOpacity
+        style={styles.sessionCard}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        <ThemedView style={styles.sessionCardContent}>
+          {/* Header with workout title and menu */}
+          <ThemedView style={styles.sessionHeader}>
+            <ThemedView style={styles.titleContainer}>
+              <ThemedText type="subtitle" style={styles.sessionTitle}>
+                {workout?.title || "Unknown Workout"}
+              </ThemedText>
+              <ThemedText style={styles.sessionDate}>
+                {session.started_at
+                  ? formatDate(session.started_at)
+                  : "Unknown"}
+              </ThemedText>
+            </ThemedView>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={handleMenuPress}
+              activeOpacity={0.7}
+            >
+              <ThemedText style={styles.menuButtonText}>⋯</ThemedText>
+            </TouchableOpacity>
           </ThemedView>
+
+          {/* Status badge */}
           <ThemedView
             style={[
               styles.statusBadge,
@@ -80,55 +133,71 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
               {session.is_completed ? "✓ Completed" : "⏳ In Progress"}
             </ThemedText>
           </ThemedView>
-        </ThemedView>
 
-        {/* Session details */}
-        <ThemedView style={styles.sessionDetails}>
-          {/* Date and time row */}
-          <ThemedView style={styles.dateTimeRow}>
-            <ThemedView style={styles.dateContainer}>
-              <ThemedText style={styles.dateLabel}>Date</ThemedText>
-              <ThemedText style={styles.dateValue}>
-                {session.started_at
-                  ? formatDate(session.started_at)
-                  : "Unknown"}
-              </ThemedText>
+          {/* Session details */}
+          <ThemedView style={styles.sessionDetails}>
+            {/* Time and duration row */}
+            <ThemedView style={styles.timeDurationRow}>
+              <ThemedView style={styles.timeContainer}>
+                <ThemedText style={styles.timeLabel}>Time</ThemedText>
+                <ThemedText style={styles.timeValue}>
+                  {session.started_at
+                    ? formatTime(session.started_at)
+                    : "Unknown"}
+                </ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.durationContainer}>
+                <ThemedText style={styles.durationLabel}>Duration</ThemedText>
+                <ThemedText style={styles.durationValue}>
+                  {session.started_at
+                    ? formatDuration(
+                        session.started_at,
+                        session.completed_at || undefined,
+                      )
+                    : "Unknown"}
+                </ThemedText>
+              </ThemedView>
             </ThemedView>
-            <ThemedView style={styles.timeContainer}>
-              <ThemedText style={styles.timeLabel}>Time</ThemedText>
-              <ThemedText style={styles.timeValue}>
-                {session.started_at
-                  ? formatTime(session.started_at)
-                  : "Unknown"}
-              </ThemedText>
-            </ThemedView>
+
+            {/* Notes if available */}
+            {session.notes && (
+              <ThemedView style={styles.notesContainer}>
+                <ThemedText style={styles.notesLabel}>Notes</ThemedText>
+                <ThemedText style={styles.notesValue} numberOfLines={2}>
+                  {session.notes}
+                </ThemedText>
+              </ThemedView>
+            )}
           </ThemedView>
-
-          {/* Duration row */}
-          <ThemedView style={styles.durationRow}>
-            <ThemedText style={styles.durationLabel}>Duration</ThemedText>
-            <ThemedText style={styles.durationValue}>
-              {session.started_at
-                ? formatDuration(
-                    session.started_at,
-                    session.completed_at || undefined,
-                  )
-                : "Unknown"}
-            </ThemedText>
-          </ThemedView>
-
-          {/* Notes if available */}
-          {session.notes && (
-            <ThemedView style={styles.notesContainer}>
-              <ThemedText style={styles.notesLabel}>Notes</ThemedText>
-              <ThemedText style={styles.notesValue} numberOfLines={2}>
-                {session.notes}
-              </ThemedText>
-            </ThemedView>
-          )}
         </ThemedView>
-      </ThemedView>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={showMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseMenu}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={handleCloseMenu}
+        >
+          <ThemedView style={styles.menuContainer}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleDelete}
+              activeOpacity={0.7}
+            >
+              <ThemedText style={styles.menuItemText}>
+                🗑️ Delete Session
+              </ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -148,7 +217,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   titleContainer: {
     flex: 1,
@@ -160,12 +229,28 @@ const styles = StyleSheet.create({
     color: "rgba(74, 144, 226, 1)",
     lineHeight: 24,
   },
+  sessionDate: {
+    fontSize: 13,
+    color: "rgba(74, 144, 226, 0.7)",
+    marginTop: 4,
+  },
+  menuButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(74, 144, 226, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.2)",
+  },
+  menuButtonText: {
+    fontSize: 20,
+    color: "rgba(74, 144, 226, 1)",
+  },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    minWidth: 100,
-    alignItems: "center",
+    alignSelf: "flex-start",
+    marginBottom: 12,
   },
   completedBadge: {
     backgroundColor: "rgba(76, 175, 80, 0.12)",
@@ -190,23 +275,20 @@ const styles = StyleSheet.create({
   sessionDetails: {
     gap: 12,
   },
-  dateTimeRow: {
+  timeDurationRow: {
     flexDirection: "row",
-    gap: 20,
-  },
-  dateContainer: {
-    flex: 1,
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 8,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(74, 144, 226, 0.1)",
   },
   timeContainer: {
     flex: 1,
   },
-  dateLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "rgba(74, 144, 226, 0.7)",
-    marginBottom: 4,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  durationContainer: {
+    flex: 1,
   },
   timeLabel: {
     fontSize: 12,
@@ -216,31 +298,18 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  dateValue: {
-    fontSize: 15,
+  durationLabel: {
+    fontSize: 12,
     fontWeight: "600",
-    color: "rgba(0, 0, 0, 0.8)",
+    color: "rgba(74, 144, 226, 0.7)",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   timeValue: {
     fontSize: 15,
     fontWeight: "600",
     color: "rgba(0, 0, 0, 0.8)",
-  },
-  durationRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 8,
-    paddingBottom: 4,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(74, 144, 226, 0.1)",
-  },
-  durationLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "rgba(74, 144, 226, 0.7)",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   durationValue: {
     fontSize: 15,
@@ -265,5 +334,37 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, 0.7)",
     fontStyle: "italic",
     lineHeight: 20,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuContainer: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 8,
+    minWidth: 200,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: "#D32F2F",
+    fontWeight: "500",
   },
 });

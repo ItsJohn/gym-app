@@ -14,6 +14,11 @@ interface SetCardProps {
   exercise: Exercise;
   weightUnit?: "kg" | "lbs";
   sessionSetId: number;
+  lastSessionData?: {
+    weight?: number;
+    reps?: number;
+    distance?: number;
+  } | null;
 }
 
 const formatTime = (seconds: number): string => {
@@ -34,6 +39,9 @@ const getReps = (
       10,
     );
   }
+  if (exercise.type === "distance") {
+    return parseInt(sessionSet?.target.distance || "1000", 10);
+  }
   if (
     exercise.type === "reps-sets" ||
     exercise.type === "reps-per-side" ||
@@ -48,6 +56,7 @@ export default function SetCard({
   exercise,
   sessionSetId,
   weightUnit = "kg",
+  lastSessionData,
 }: SetCardProps) {
   const timer = useRestTimer(exercise.rest_seconds ?? undefined);
   const { mutate: updateSessionSet } = useUpdateSessionSet();
@@ -76,12 +85,19 @@ export default function SetCard({
 
   const handleRepsChange = useCallback(
     (reps: number) => {
-      updateSessionSet({
-        ...sessionSet,
-        target: { ...sessionSet?.target, reps: reps.toString() },
-      });
+      if (exercise.type === "distance") {
+        updateSessionSet({
+          ...sessionSet,
+          target: { ...sessionSet?.target, distance: reps.toString() },
+        });
+      } else {
+        updateSessionSet({
+          ...sessionSet,
+          target: { ...sessionSet?.target, reps: reps.toString() },
+        });
+      }
     },
-    [sessionSet, updateSessionSet],
+    [sessionSet, updateSessionSet, exercise.type],
   );
 
   const handleComplete = useCallback(() => {
@@ -135,6 +151,7 @@ export default function SetCard({
             onWeightChange={handleWeightChange}
             onRepsChange={handleRepsChange}
             weightUnit={weightUnit}
+            lastSessionData={lastSessionData}
           />
 
           <ThemedView style={styles.checkButtonWrapper}>

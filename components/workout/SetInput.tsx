@@ -13,6 +13,11 @@ interface SetInputProps {
   onRepsChange: (reps: number) => void;
   onComplete: () => void;
   weightUnit?: "kg" | "lbs";
+  lastSessionData?: {
+    weight?: number;
+    reps?: number;
+    distance?: number;
+  } | null;
 }
 
 export default function SetInput({
@@ -23,6 +28,7 @@ export default function SetInput({
   onRepsChange,
   onComplete,
   weightUnit = "kg",
+  lastSessionData,
 }: SetInputProps) {
   const initialDuration = exercise.type === "duration" ? reps || 30 : 30;
   const countdown = useCountdown(initialDuration);
@@ -38,6 +44,47 @@ export default function SetInput({
       onComplete();
     }
   }, [countdown.isFinished, onComplete]);
+
+  // Preselect last session values if no current values are set
+  useEffect(() => {
+    if (lastSessionData && !weight && lastSessionData.weight) {
+      onWeightChange(lastSessionData.weight);
+    }
+
+    if (lastSessionData && !reps) {
+      if (exercise.type === "distance" && lastSessionData.distance) {
+        onRepsChange(lastSessionData.distance);
+      } else if (exercise.type !== "distance" && lastSessionData.reps) {
+        onRepsChange(lastSessionData.reps);
+      }
+    }
+  }, [
+    lastSessionData,
+    weight,
+    reps,
+    exercise.type,
+    onWeightChange,
+    onRepsChange,
+  ]);
+
+  // Auto-select target distance for distance exercises
+  useEffect(() => {
+    if (exercise.type === "distance" && (!reps || reps === 0)) {
+      const targetDistance = parseInt(exercise.target.distance || "1000", 10);
+      // Find the closest available distance option
+      const distances = [
+        1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500,
+        7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000,
+        12500, 13000, 13500, 14000, 14500, 15000,
+      ];
+      const closestDistance = distances.reduce((prev, curr) =>
+        Math.abs(curr - targetDistance) < Math.abs(prev - targetDistance)
+          ? curr
+          : prev,
+      );
+      onRepsChange(closestDistance);
+    }
+  }, [exercise.type, exercise.target.distance, reps, onRepsChange]);
 
   // Generate weight options (5-500 in increments of 2.5 for kg, 5-1000 in increments of 5 for lbs)
   const weightOptions = useMemo(() => {
@@ -63,16 +110,75 @@ export default function SetInput({
   // Generate reps options based on exercise type
   const repsOptions = useMemo(() => {
     const options = [];
-    const maxReps = exercise.type === "duration" ? 300 : 100; // 300 seconds max for duration
 
-    for (let i = 1; i <= maxReps; i++) {
-      options.push({
-        label: i.toString(),
-        value: i,
+    if (exercise.type === "distance") {
+      // Simple, reliable distance options starting from 1km up to 15km with 0.5km increments
+      const distances = [
+        1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500,
+        7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000,
+        12500, 13000, 13500, 14000, 14500, 15000,
+      ];
+
+      distances.forEach((distance) => {
+        const km = distance / 1000;
+        options.push({
+          label: `${km}km`,
+          value: distance,
+        });
       });
+    } else {
+      // Calculate max reps based on exercise properties
+      const calculateMaxReps = () => {
+        const baseTarget = exercise.target;
+
+        switch (exercise.type) {
+          case "duration":
+            // For duration exercises, use a reasonable range based on target duration
+            const targetDuration = parseInt(baseTarget.duration || "30", 10);
+            // Allow 10% to 300% of target duration, with a minimum of 10s and maximum of 600s
+            const minDuration = Math.max(10, Math.floor(targetDuration * 0.1));
+            const maxDuration = Math.min(600, Math.ceil(targetDuration * 3));
+            return maxDuration;
+
+          case "reps":
+          case "reps-sets":
+            // For rep-based exercises, use target reps as a guide
+            const targetReps = parseInt(baseTarget.reps || "10", 10);
+            // Allow 1 to 200% of target reps, with a minimum of 1 and maximum of 200
+            const maxReps = Math.min(
+              200,
+              Math.max(1, Math.ceil(targetReps * 2)),
+            );
+            return maxReps;
+
+          case "reps-per-side":
+            // For per-side exercises, use target per_side as a guide
+            const targetPerSide = parseInt(baseTarget.per_side || "10", 10);
+            // Allow 1 to 150% of target per side, with a minimum of 1 and maximum of 150
+            const maxPerSide = Math.min(
+              150,
+              Math.max(1, Math.ceil(targetPerSide * 1.5)),
+            );
+            return maxPerSide;
+
+          default:
+            return 100; // Fallback for unknown types
+        }
+      };
+
+      const maxReps = calculateMaxReps();
+
+      // For non-distance exercises, generate all values from 1 to max
+      for (let i = 1; i <= maxReps; i++) {
+        options.push({
+          label: i.toString(),
+          value: i,
+        });
+      }
     }
+
     return options;
-  }, [exercise.type]);
+  }, [exercise.type, exercise.target]);
 
   const repsLabel = useMemo(() => {
     switch (exercise.type) {
@@ -94,8 +200,6 @@ export default function SetInput({
     switch (exercise.type) {
       case "duration":
         return "s";
-      case "distance":
-        return "m";
       default:
         return "";
     }
@@ -120,7 +224,7 @@ export default function SetInput({
         <ThemedView style={styles.selectContainer}>
           <FancySelect
             label={repsLabel}
-            value={reps || 0}
+            value={reps || (exercise.type === "distance" ? 1000 : 0)}
             options={repsOptions}
             onValueChange={(value) => onRepsChange(Number(value))}
             suffix={repsSuffix}

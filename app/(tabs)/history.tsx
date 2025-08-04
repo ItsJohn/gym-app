@@ -8,6 +8,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { SessionService } from "@/database/services/sessionService";
 import { useActiveWorkouts, useLatestWorkoutStats } from "@/hooks";
+import { sessionKeys } from "@/hooks/service/session";
 import { Session } from "@/validation/session";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -21,7 +22,7 @@ export default function HistoryScreen() {
   // Get sessions from all active workouts
   const { data: allActiveWorkoutSessions, isLoading: isSessionsLoading } =
     useQuery({
-      queryKey: ["allActiveWorkoutSessions"],
+      queryKey: sessionKeys.allActiveWorkoutSessions(),
       queryFn: async () => {
         if (!activeWorkouts || activeWorkouts.length === 0) {
           return [];

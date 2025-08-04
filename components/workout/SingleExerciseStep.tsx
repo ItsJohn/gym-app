@@ -1,11 +1,15 @@
 import { ThemedView } from "@/components/ThemedView";
-import { useSessionSetByExerciseId } from "@/hooks";
+import {
+  useLastSessionDataForExercise,
+  useSessionSetByExerciseId,
+} from "@/hooks";
 import { Exercise } from "@/validation/schemas";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import ExerciseHeader from "./ExerciseHeader";
 import ExerciseInfo from "./ExerciseInfo";
+import LastSessionReminder from "./LastSessionReminder";
 import SetCard from "./SetCard";
 import WorkoutNavigation from "./WorkoutNavigation";
 
@@ -31,8 +35,15 @@ export default function SingleExerciseStep({
   weightUnit = "kg",
 }: SingleExerciseStepProps) {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
+
   const { data: sessionSets, isLoading: isSessionSetLoading } =
     useSessionSetByExerciseId(parseInt(sessionId), exercise.id!);
+
+  const { data: lastSessionData } = useLastSessionDataForExercise(
+    parseInt(workoutId),
+    exercise.id!,
+  );
 
   // const handleCustomSetsChange = useCallback(() => {
   //   if (exercise.type !== "reps-sets" && exercise.type !== "reps-per-side") {
@@ -110,6 +121,12 @@ export default function SingleExerciseStep({
             // onCustomSetsChange={handleCustomSetsChange}
           />
 
+          <LastSessionReminder
+            workoutId={parseInt(workoutId)}
+            exercise={exercise}
+            weightUnit={weightUnit}
+          />
+
           <ThemedView style={styles.setsContainer}>
             {sessionSets?.map((set, setIndex) => (
               <SetCard
@@ -118,6 +135,7 @@ export default function SingleExerciseStep({
                 exercise={exercise}
                 sessionSetId={set.id!}
                 weightUnit={weightUnit}
+                lastSessionData={lastSessionData}
               />
             ))}
           </ThemedView>

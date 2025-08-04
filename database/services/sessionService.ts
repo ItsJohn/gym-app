@@ -206,4 +206,71 @@ export class SessionService {
 
     return session;
   }
+
+  // Get the last completed session's data for a specific exercise
+  static async getLastSessionDataForExercise(
+    workoutId: number,
+    exerciseId: string,
+  ): Promise<{ weight?: number; reps?: number; distance?: number } | null> {
+    // Get the most recent completed session for this workout
+    const lastCompletedSession = await getFirstRow<Session>(
+      `SELECT * FROM workout_sessions
+       WHERE workout_id = ? AND is_completed = 1
+       ORDER BY completed_at DESC LIMIT 1`,
+      [workoutId],
+    );
+
+    if (!lastCompletedSession || !lastCompletedSession.id) {
+      return null;
+    }
+
+    // Get all sets for this exercise from the last session
+    const exerciseSets = await getAllRows<ExerciseSet & { target: string }>(
+      `SELECT *, target FROM session_set
+       WHERE session_id = ? AND exercise_id = ? AND is_completed = 1
+       ORDER BY created_at ASC`,
+      [lastCompletedSession.id, exerciseId],
+    );
+
+    if (exerciseSets.length === 0) {
+      return null;
+    }
+
+    // Parse the target data to get weight, reps, and distance
+    const parsedSets = exerciseSets.map((set) => {
+      try {
+        const target = JSON.parse(set.target);
+        return {
+          weight: target.weight,
+          reps: target.reps,
+          distance: target.distance,
+        };
+      } catch {
+        return { weight: undefined, reps: undefined, distance: undefined };
+      }
+    });
+
+    // Find minimum values (excluding undefined/null values)
+    const validWeights = parsedSets
+      .map((set) => set.weight)
+      .filter((weight): weight is number => weight !== undefined && weight > 0);
+
+    const validReps = parsedSets
+      .map((set) => set.reps)
+      .filter((reps): reps is number => reps !== undefined && reps > 0);
+
+    const validDistances = parsedSets
+      .map((set) => set.distance)
+      .filter(
+        (distance): distance is number =>
+          distance !== undefined && distance > 0,
+      );
+
+    return {
+      weight: validWeights.length > 0 ? Math.min(...validWeights) : undefined,
+      reps: validReps.length > 0 ? Math.min(...validReps) : undefined,
+      distance:
+        validDistances.length > 0 ? Math.min(...validDistances) : undefined,
+    };
+  }
 }

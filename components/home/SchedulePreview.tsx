@@ -1,9 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { SessionService } from "@/database/services/sessionService";
 import { DAYS_OF_WEEK, DayOfWeek } from "@/database/types";
 import { useWorkouts } from "@/hooks";
 import { Workout } from "@/validation/schemas";
-import React, { useCallback, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface UserSchedule {
@@ -51,11 +53,38 @@ export default function SchedulePreview({
           .replace(" ", "-");
 
         if (workoutDays && workoutDays[day]) {
+          // Check if workout is completed for today
+          let isCompleted = false;
+          if (i === dayNumber) {
+            // Only check completion for today
+            try {
+              const sessions = await SessionService.getSessionsByWorkoutId(
+                workoutDays[day].id!,
+              );
+              const todayStart = new Date();
+              todayStart.setHours(0, 0, 0, 0);
+              const todayEnd = new Date();
+              todayEnd.setHours(23, 59, 59, 999);
+
+              isCompleted = sessions.some((session) => {
+                if (!session.started_at) return false;
+                const sessionDate = new Date(session.started_at);
+                return (
+                  session.is_completed &&
+                  sessionDate >= todayStart &&
+                  sessionDate <= todayEnd
+                );
+              });
+            } catch (sessionError) {
+              console.error("Error checking session completion:", sessionError);
+            }
+          }
+
           scheduleItems.push({
             workout: workoutDays[day],
             dayName: day,
             date: formattedDate,
-            isCompleted: false,
+            isCompleted,
           });
         } else {
           scheduleItems.push({
@@ -65,51 +94,10 @@ export default function SchedulePreview({
             isCompleted: undefined,
           });
         }
-
-        // let workout: WorkoutWithExercises | null = null;
-        // try {
-        //   workout = await WorkoutScheduleService.getWorkoutForDayOfWeek(dayOfWeek);
-        // } catch (workoutError) {
-        //   console.error(`Error getting workout for ${DAYS_OF_WEEK[dayOfWeek]}:`, workoutError);
-        // }
-        // console.log('workout', workout);
-
-        // // Check if workout is completed today
-        // let isCompleted = false;
-        // if (workout && i === 0) { // Only check completion for today
-        //   try {
-        //     const sessions = await SessionService.getSessionsByWorkoutId(workout.id!);
-        //     const todayStart = new Date(today);
-        //     todayStart.setHours(0, 0, 0, 0);
-        //     const todayEnd = new Date(today);
-        //     todayEnd.setHours(23, 59, 59, 999);
-
-        //     isCompleted = sessions.some(session => {
-        //       const sessionDate = new Date(session.started_at);
-        //       return session.is_completed &&
-        //              sessionDate >= todayStart &&
-        //              sessionDate <= todayEnd;
-        //     });
-        //   } catch (sessionError) {
-        //     console.error('Error checking session completion:', sessionError);
-        //   }
       }
 
       // Filter out null values and set the schedule
       setSchedule(scheduleItems);
-
-      // scheduleItems.push({
-      //   workout,
-      //   dayOfWeek,
-      //   dayName: DAYS_OF_WEEK[dayOfWeek],
-      //   dayShort: DAYS_OF_WEEK_SHORT[dayOfWeek],
-      //   isToday: i === 0,
-      //   isCompleted,
-      //   date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      // });
-      // }
-      //   console.log('scheduleItems', scheduleItems);
-      //   setWeekSchedule(scheduleItems);
     } catch (error) {
       console.error("Error loading week schedule:", error);
       // Set empty schedule on error
@@ -165,19 +153,23 @@ export default function SchedulePreview({
             >
               {item.workout ? item.workout.title : "Rest Day"}
             </ThemedText>
-            <View
-              style={[
-                styles.workoutDot,
-                {
-                  backgroundColor:
-                    index === 0
-                      ? item.isCompleted
-                        ? "#4CAF50"
-                        : "#2196F3" // Green if completed, blue if not
-                      : "#9E9E9E", // Gray for future days
-                },
-              ]}
-            />
+            {index === 0 && item.isCompleted ? (
+              <View style={[styles.workoutDot, { backgroundColor: "#4CAF50" }]}>
+                <Ionicons name="checkmark" size={8} color="white" />
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.workoutDot,
+                  {
+                    backgroundColor:
+                      index === 0
+                        ? "#2196F3" // Blue if not completed
+                        : "#9E9E9E", // Gray for future days
+                  },
+                ]}
+              />
+            )}
           </View>
         </View>
       ))}
@@ -231,6 +223,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
+    gap: 12,
   },
   todayItem: {
     backgroundColor: "rgba(33, 150, 243, 0.15)",
@@ -238,7 +231,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(33, 150, 243, 0.3)",
   },
   scheduleDay: {
-    flex: 1,
+    flex: 0,
+    minWidth: 60,
   },
   dayText: {
     fontSize: 14,
@@ -253,18 +247,22 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scheduleWorkout: {
-    flex: 2,
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   workoutText: {
     fontSize: 14,
+    flex: 1,
   },
   workoutDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    flexShrink: 0,
   },
   viewAllButton: {
     alignItems: "center",
