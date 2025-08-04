@@ -14,7 +14,7 @@ export function useScrollTimeout(
   trigger: boolean = false,
 ) {
   const savedCallback = useRef(scrollCallback);
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Remember the latest callback
   useEffect(() => {

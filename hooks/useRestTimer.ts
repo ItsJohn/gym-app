@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export function useRestTimer(duration: number = 60) {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const start = useCallback(
     (customDuration?: number) => {
@@ -25,7 +25,7 @@ export function useRestTimer(duration: number = 60) {
           }
           return prev - 1;
         });
-      }, 1000) as number;
+      }, 1000);
     },
     [duration],
   );
