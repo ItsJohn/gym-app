@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export function useCountdown(initialSeconds: number) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [isActive, setIsActive] = useState(false);
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const start = useCallback(() => {
     setIsActive(true);
@@ -46,7 +46,7 @@ export function useCountdown(initialSeconds: number) {
           }
           return prev - 1;
         });
-      }, 1000) as number;
+      }, 1000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
