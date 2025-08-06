@@ -1,10 +1,42 @@
 import { act, renderHook } from "@testing-library/react";
 import { useRestTimer } from "../useRestTimer";
 
+// Mock the useWorkoutTimer context
+const mockStartTimer = jest.fn();
+const mockStopTimer = jest.fn();
+const mockSkipTimer = jest.fn();
+const mockGetTimerState = jest.fn();
+const mockFormatTime = jest.fn((seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+});
+
+jest.mock("@/contexts/WorkoutTimerContext", () => ({
+  useWorkoutTimer: () => ({
+    startTimer: mockStartTimer,
+    stopTimer: mockStopTimer,
+    skipTimer: mockSkipTimer,
+    getTimerState: mockGetTimerState,
+    formatTime: mockFormatTime,
+  }),
+}));
+
 describe("useRestTimer", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Default mock state - timer not active
+    mockGetTimerState.mockReturnValue({
+      timeRemaining: 0,
+      isActive: false,
+      startTime: null,
+      duration: 0,
+    });
+  });
+
   describe("initialization", () => {
     it("should initialize with default duration of 60 seconds", () => {
-      const { result } = renderHook(() => useRestTimer());
+      const { result } = renderHook(() => useRestTimer("test-timer"));
 
       expect(result.current.timeRemaining).toBe(0);
       expect(result.current.isActive).toBe(false);
@@ -12,7 +44,7 @@ describe("useRestTimer", () => {
     });
 
     it("should initialize with custom duration", () => {
-      const { result } = renderHook(() => useRestTimer(120));
+      const { result } = renderHook(() => useRestTimer("test-timer", 120));
 
       expect(result.current.timeRemaining).toBe(0);
       expect(result.current.isActive).toBe(false);
@@ -20,7 +52,7 @@ describe("useRestTimer", () => {
     });
 
     it("should format time correctly on initialization", () => {
-      const { result } = renderHook(() => useRestTimer(125));
+      const { result } = renderHook(() => useRestTimer("test-timer", 125));
 
       expect(result.current.formatTime()).toBe("00:00");
     });
@@ -28,79 +60,61 @@ describe("useRestTimer", () => {
 
   describe("start functionality", () => {
     it("should start the rest timer with default duration", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.start();
       });
 
-      expect(result.current.timeRemaining).toBe(60);
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.isFinished).toBe(false);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 60);
     });
 
     it("should start the rest timer with custom duration", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.start(90);
       });
 
-      expect(result.current.timeRemaining).toBe(90);
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.isFinished).toBe(false);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 90);
     });
 
     it("should format time correctly when started", () => {
-      const { result } = renderHook(() => useRestTimer(65));
-
-      act(() => {
-        result.current.start();
+      // Mock active timer state
+      mockGetTimerState.mockReturnValue({
+        timeRemaining: 65,
+        isActive: true,
+        startTime: Date.now(),
+        duration: 65,
       });
+
+      const { result } = renderHook(() => useRestTimer("test-timer", 65));
 
       expect(result.current.formatTime()).toBe("01:05");
     });
   });
 
   describe("stop functionality", () => {
-    it("should stop the rest timer and reset time remaining", () => {
-      const { result } = renderHook(() => useRestTimer(60));
-
-      act(() => {
-        result.current.start();
-      });
-
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.timeRemaining).toBe(60);
+    it("should stop the rest timer", () => {
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.stop();
       });
 
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.timeRemaining).toBe(0);
-      expect(result.current.isFinished).toBe(true);
+      expect(mockStopTimer).toHaveBeenCalledWith("test-timer");
     });
   });
 
   describe("skip functionality", () => {
-    it("should skip the rest timer and stop it", () => {
-      const { result } = renderHook(() => useRestTimer(60));
-
-      act(() => {
-        result.current.start();
-      });
-
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.timeRemaining).toBe(60);
+    it("should skip the rest timer", () => {
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.skip();
       });
 
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.timeRemaining).toBe(0);
-      expect(result.current.isFinished).toBe(true);
+      expect(mockSkipTimer).toHaveBeenCalledWith("test-timer");
     });
   });
 
@@ -115,10 +129,14 @@ describe("useRestTimer", () => {
       ];
 
       testCases.forEach(({ seconds, expected }) => {
-        const { result } = renderHook(() => useRestTimer(60));
-        act(() => {
-          result.current.start(seconds);
+        mockGetTimerState.mockReturnValue({
+          timeRemaining: seconds,
+          isActive: false,
+          startTime: null,
+          duration: seconds,
         });
+
+        const { result } = renderHook(() => useRestTimer("test-timer", 60));
         expect(result.current.formatTime()).toBe(expected);
       });
     });
@@ -126,30 +144,32 @@ describe("useRestTimer", () => {
 
   describe("isFinished state", () => {
     it("should be true initially", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
       expect(result.current.isFinished).toBe(true);
     });
 
     it("should be false when timer is active", () => {
-      const { result } = renderHook(() => useRestTimer(60));
-
-      act(() => {
-        result.current.start();
+      mockGetTimerState.mockReturnValue({
+        timeRemaining: 60,
+        isActive: true,
+        startTime: Date.now(),
+        duration: 60,
       });
+
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       expect(result.current.isFinished).toBe(false);
     });
 
     it("should be true when timer is stopped", () => {
-      const { result } = renderHook(() => useRestTimer(60));
-
-      act(() => {
-        result.current.start();
+      mockGetTimerState.mockReturnValue({
+        timeRemaining: 0,
+        isActive: false,
+        startTime: null,
+        duration: 60,
       });
 
-      act(() => {
-        result.current.stop();
-      });
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       expect(result.current.isFinished).toBe(true);
     });
@@ -157,19 +177,17 @@ describe("useRestTimer", () => {
 
   describe("edge cases", () => {
     it("should handle zero duration", () => {
-      const { result } = renderHook(() => useRestTimer(0));
+      const { result } = renderHook(() => useRestTimer("test-timer", 0));
 
       act(() => {
         result.current.start();
       });
 
-      expect(result.current.timeRemaining).toBe(0);
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.formatTime()).toBe("00:00");
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 0);
     });
 
     it("should handle rapid start/stop calls", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.start();
@@ -178,48 +196,31 @@ describe("useRestTimer", () => {
         result.current.skip();
       });
 
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.timeRemaining).toBe(0);
+      expect(mockStartTimer).toHaveBeenCalledTimes(2);
+      expect(mockStopTimer).toHaveBeenCalledTimes(1);
+      expect(mockSkipTimer).toHaveBeenCalledTimes(1);
     });
 
     it("should handle multiple start calls", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.start();
       });
 
-      expect(result.current.timeRemaining).toBe(60);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 60);
 
       act(() => {
         result.current.start(30);
       });
 
-      expect(result.current.timeRemaining).toBe(30);
-    });
-  });
-
-  describe("cleanup", () => {
-    it("should clear interval on unmount", () => {
-      const clearIntervalSpy = jest.spyOn(global, "clearInterval");
-
-      const { result, unmount } = renderHook(() => useRestTimer(60));
-
-      act(() => {
-        result.current.start();
-      });
-
-      unmount();
-
-      expect(clearIntervalSpy).toHaveBeenCalled();
-
-      clearIntervalSpy.mockRestore();
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 30);
     });
   });
 
   describe("integration tests", () => {
     it("should handle complete rest timer lifecycle", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       // Initial state
       expect(result.current.timeRemaining).toBe(0);
@@ -230,215 +231,140 @@ describe("useRestTimer", () => {
       act(() => {
         result.current.start();
       });
-      expect(result.current.timeRemaining).toBe(60);
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.isFinished).toBe(false);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 60);
 
       // Stop timer
       act(() => {
         result.current.stop();
       });
-      expect(result.current.timeRemaining).toBe(0);
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.isFinished).toBe(true);
+      expect(mockStopTimer).toHaveBeenCalledWith("test-timer");
 
       // Start with custom duration
       act(() => {
         result.current.start(30);
       });
-      expect(result.current.timeRemaining).toBe(30);
-      expect(result.current.isActive).toBe(true);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 30);
 
       // Skip timer
       act(() => {
         result.current.skip();
       });
-      expect(result.current.timeRemaining).toBe(0);
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.isFinished).toBe(true);
+      expect(mockSkipTimer).toHaveBeenCalledWith("test-timer");
     });
 
     it("should handle restart with different duration", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+      const { result } = renderHook(() => useRestTimer("test-timer", 60));
 
       act(() => {
         result.current.start();
       });
 
-      expect(result.current.timeRemaining).toBe(60);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 60);
 
       act(() => {
         result.current.stop();
       });
+
+      expect(mockStopTimer).toHaveBeenCalledWith("test-timer");
 
       act(() => {
         result.current.start(90);
       });
 
-      expect(result.current.timeRemaining).toBe(90);
-      expect(result.current.isActive).toBe(true);
+      expect(mockStartTimer).toHaveBeenCalledWith("test-timer", 90);
     });
   });
 
-  describe("fake timer integration tests", () => {
-    let setIntervalSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-      jest.useFakeTimers();
-      setIntervalSpy = jest.spyOn(global, "setInterval");
-    });
-
-    afterEach(() => {
-      jest.runOnlyPendingTimers();
-      jest.useRealTimers();
-      setIntervalSpy.mockRestore();
-    });
-
-    it("should format time correctly during countdown", () => {
-      const { result } = renderHook(() => useRestTimer(65));
-
-      act(() => {
-        result.current.start();
+  describe("timer state updates", () => {
+    it("should reflect timer state changes", () => {
+      // Initial state
+      mockGetTimerState.mockReturnValue({
+        timeRemaining: 0,
+        isActive: false,
+        startTime: null,
+        duration: 60,
       });
 
-      expect(result.current.formatTime()).toBe("01:05");
+      const { result, rerender } = renderHook(() =>
+        useRestTimer("test-timer", 60),
+      );
 
-      act(() => {
-        jest.advanceTimersByTime(1000);
+      expect(result.current.timeRemaining).toBe(0);
+      expect(result.current.isActive).toBe(false);
+
+      // Update to active state
+      mockGetTimerState.mockReturnValue({
+        timeRemaining: 60,
+        isActive: true,
+        startTime: Date.now(),
+        duration: 60,
       });
 
-      expect(result.current.formatTime()).toBe("01:04");
-    });
+      rerender();
 
-    it("should test timer functionality with controlled intervals", () => {
-      const { result } = renderHook(() => useRestTimer(60));
-
-      // Start the timer
-      act(() => {
-        result.current.start();
-      });
-
-      expect(result.current.isActive).toBe(true);
       expect(result.current.timeRemaining).toBe(60);
-
-      // Test that the interval is set up correctly
-      expect(setIntervalSpy).toHaveBeenCalled();
-    });
-
-    it("should test stop functionality with timers", () => {
-      const { result } = renderHook(() => useRestTimer(60));
-
-      act(() => {
-        result.current.start();
-      });
-
       expect(result.current.isActive).toBe(true);
-
-      act(() => {
-        result.current.stop();
-      });
-
-      expect(result.current.isActive).toBe(false);
-
-      // Test that timers don't affect stopped state
-      act(() => {
-        jest.advanceTimersByTime(2000);
-      });
-
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.timeRemaining).toBe(0);
+      expect(result.current.isFinished).toBe(false);
     });
 
-    it("should test skip functionality with timers", () => {
-      const { result } = renderHook(() => useRestTimer(60));
+    it("should handle countdown simulation", () => {
+      // Simulate countdown from 5 to 0
+      let timeRemaining = 5;
+      mockGetTimerState.mockImplementation(() => ({
+        timeRemaining,
+        isActive: timeRemaining > 0,
+        startTime: Date.now(),
+        duration: 5,
+      }));
 
-      act(() => {
-        result.current.start();
-      });
-
-      expect(result.current.isActive).toBe(true);
-
-      act(() => {
-        result.current.skip();
-      });
-
-      expect(result.current.isActive).toBe(false);
-
-      // Test that timers don't affect skipped state
-      act(() => {
-        jest.advanceTimersByTime(2000);
-      });
-
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.timeRemaining).toBe(0);
-    });
-
-    it("should handle zero duration with fake timers", () => {
-      const { result } = renderHook(() => useRestTimer(0));
-
-      act(() => {
-        result.current.start();
-      });
-
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.timeRemaining).toBe(0);
-
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-
-      // When timeRemaining is 0, the interval should stop automatically
-      expect(result.current.isActive).toBe(false);
-      expect(result.current.timeRemaining).toBe(0);
-      expect(result.current.isFinished).toBe(true);
-    });
-
-    it("should decrement time remaining during countdown", () => {
-      const { result } = renderHook(() => useRestTimer(5));
-
-      act(() => {
-        result.current.start();
-      });
+      const { result, rerender } = renderHook(() =>
+        useRestTimer("test-timer", 5),
+      );
 
       expect(result.current.timeRemaining).toBe(5);
+      expect(result.current.isActive).toBe(true);
 
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
+      // Simulate 1 second passed
+      timeRemaining = 4;
+      rerender();
 
       expect(result.current.timeRemaining).toBe(4);
-
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-
-      expect(result.current.timeRemaining).toBe(3);
-    });
-
-    it("should stop automatically when reaching zero", () => {
-      const { result } = renderHook(() => useRestTimer(2));
-
-      act(() => {
-        result.current.start();
-      });
-
       expect(result.current.isActive).toBe(true);
-      expect(result.current.timeRemaining).toBe(2);
 
-      // Advance by 1 second
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-      expect(result.current.timeRemaining).toBe(1);
-
-      // Advance by another second to reach zero
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
+      // Simulate timer finished
+      timeRemaining = 0;
+      rerender();
 
       expect(result.current.timeRemaining).toBe(0);
       expect(result.current.isActive).toBe(false);
       expect(result.current.isFinished).toBe(true);
+    });
+  });
+
+  describe("multiple timers", () => {
+    it("should handle multiple timer instances", () => {
+      const { result: timer1 } = renderHook(() => useRestTimer("timer-1", 60));
+      const { result: timer2 } = renderHook(() => useRestTimer("timer-2", 90));
+
+      act(() => {
+        timer1.current.start();
+      });
+
+      expect(mockStartTimer).toHaveBeenCalledWith("timer-1", 60);
+
+      act(() => {
+        timer2.current.start();
+      });
+
+      expect(mockStartTimer).toHaveBeenCalledWith("timer-2", 90);
+
+      act(() => {
+        timer1.current.stop();
+        timer2.current.skip();
+      });
+
+      expect(mockStopTimer).toHaveBeenCalledWith("timer-1");
+      expect(mockSkipTimer).toHaveBeenCalledWith("timer-2");
     });
   });
 });

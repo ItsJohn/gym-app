@@ -1,10 +1,13 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { useRestTimer, useSessionSet, useUpdateSessionSet } from "@/hooks";
-import { Exercise } from "@/validation/schemas";
-import { SessionSet } from "@/validation/sessionSets";
 import { useCallback, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
+
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useRestTimer } from "@/hooks";
+import { useSessionSet, useUpdateSessionSet } from "@/hooks/service";
+import { Exercise } from "@/validation/schemas";
+import { SessionSet } from "@/validation/sessionSets";
+
 import CompleteButton from "./CompleteButton";
 import SetHeader from "./SetHeader";
 import SetInput from "./SetInput";
@@ -12,8 +15,8 @@ import SetInput from "./SetInput";
 interface SetCardProps {
   setNumber: number;
   exercise: Exercise;
-  weightUnit?: "kg" | "lbs";
   sessionSetId: number;
+  weightUnit?: "kg" | "lbs";
   lastSessionData?: {
     weight?: number;
     reps?: number;
@@ -58,7 +61,9 @@ export default function SetCard({
   weightUnit = "kg",
   lastSessionData,
 }: SetCardProps) {
-  const timer = useRestTimer(exercise.rest_seconds ?? undefined);
+  // Create a unique timer ID for this set
+  const timerId = `set-${sessionSetId}`;
+  const timer = useRestTimer(timerId, exercise.rest_seconds ?? undefined);
   const { mutate: updateSessionSet } = useUpdateSessionSet();
   const { data: sessionSet } = useSessionSet(sessionSetId);
 
@@ -143,23 +148,25 @@ export default function SetCard({
           lightColor="transparent"
           darkColor="transparent"
         >
-          <SetInput
-            exercise={exercise}
-            weight={sessionSet?.target.weight ?? undefined}
-            reps={getReps(exercise, sessionSet)}
-            onComplete={handleComplete}
-            onWeightChange={handleWeightChange}
-            onRepsChange={handleRepsChange}
-            weightUnit={weightUnit}
-            lastSessionData={lastSessionData}
-          />
-
-          <ThemedView style={styles.checkButtonWrapper}>
-            <CompleteButton
-              isCompleted={sessionSet.is_completed}
-              isEnabled={!!isCompleteButtonEnabled}
+          <ThemedView style={styles.inputRow}>
+            <SetInput
+              exercise={exercise}
+              weight={sessionSet?.target.weight ?? undefined}
+              reps={getReps(exercise, sessionSet)}
               onComplete={handleComplete}
+              onWeightChange={handleWeightChange}
+              onRepsChange={handleRepsChange}
+              weightUnit={weightUnit}
+              lastSessionData={lastSessionData}
             />
+
+            <ThemedView style={styles.completeButtonContainer}>
+              <CompleteButton
+                isCompleted={sessionSet.is_completed}
+                isEnabled={!!isCompleteButtonEnabled}
+                onComplete={handleComplete}
+              />
+            </ThemedView>
           </ThemedView>
         </ThemedView>
       )}
@@ -169,37 +176,49 @@ export default function SetCard({
 
 const styles = StyleSheet.create({
   setContainer: {
-    backgroundColor: "rgba(74, 144, 226, 0.05)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "rgba(74, 144, 226, 0.2)",
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   completedSetContainer: {
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     borderColor: "rgba(76, 175, 80, 0.3)",
   },
   restingSetContainer: {
-    backgroundColor: "rgba(255, 193, 7, 0.1)",
-    borderColor: "rgba(255, 193, 7, 0.3)",
+    backgroundColor: "rgba(255, 152, 0, 0.1)",
+    borderColor: "rgba(255, 152, 0, 0.3)",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 14,
+    opacity: 0.7,
   },
   setInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
+    marginTop: 12,
   },
-  checkButtonWrapper: {
-    justifyContent: "center",
-    alignItems: "baseline",
-    paddingTop: 25,
+  inputRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: 12,
+  },
+  completeButtonContainer: {
+    paddingBottom: 8,
   },
   restContainer: {
     alignItems: "center",
-    paddingVertical: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
   },
   restTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
     marginBottom: 8,
   },
@@ -208,32 +227,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FF9800",
     marginBottom: 8,
+    textAlign: "center",
   },
   restMessage: {
     fontSize: 14,
-    opacity: 0.7,
+    opacity: 0.8,
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   skipButton: {
-    backgroundColor: "#FF9800",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
+    backgroundColor: "rgba(255, 152, 0, 0.2)",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 152, 0, 0.3)",
   },
   skipButtonText: {
-    color: "white",
+    color: "#FF9800",
     fontSize: 14,
     fontWeight: "600",
-  },
-  loadingContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    color: "#4A90E2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 16,
   },
 });

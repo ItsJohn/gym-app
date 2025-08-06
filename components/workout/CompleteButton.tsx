@@ -38,9 +38,9 @@ export default function CompleteButton({
 
 const styles = StyleSheet.create({
   checkButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "rgba(74, 144, 226, 0.1)",
     borderWidth: 1.5,
     borderColor: "#4A90E2",
@@ -67,13 +67,18 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   checkIcon: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#4A90E2",
+    textAlign: "center",
+    textAlignVertical: "center",
+    lineHeight: 16,
+    includeFontPadding: false,
   },
   checkIconCompleted: {
     color: "white",
-    fontSize: 20,
+    fontSize: 18,
+    lineHeight: 18,
   },
   checkIconDisabled: {
     color: "rgba(74, 144, 226, 0.4)",

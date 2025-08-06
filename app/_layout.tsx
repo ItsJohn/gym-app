@@ -12,6 +12,7 @@ import { Text, View } from "react-native";
 import "react-native-reanimated";
 
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { WorkoutTimerProvider } from "@/contexts/WorkoutTimerContext";
 import { initializeDatabase } from "@/database/database";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
@@ -100,20 +101,22 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="workout" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="workout-editor"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
+        <WorkoutTimerProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="workout" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="workout-editor"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </WorkoutTimerProvider>
       </SettingsProvider>
     </QueryClientProvider>
   );

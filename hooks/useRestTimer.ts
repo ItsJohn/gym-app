@@ -1,62 +1,41 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useWorkoutTimer } from "@/contexts/WorkoutTimerContext";
+import { useCallback, useMemo } from "react";
 
 /**
- * Hook for managing a single rest timer
+ * Hook for managing a rest timer that persists across navigation
  * Used for rest periods between workout sets
+ * @param timerId - Unique identifier for this timer
  * @param duration - Rest duration in seconds
  * @returns Object with rest timer state and control functions
  */
-export function useRestTimer(duration: number = 60) {
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+export function useRestTimer(timerId: string, duration: number = 60) {
+  const { startTimer, stopTimer, skipTimer, getTimerState, formatTime } =
+    useWorkoutTimer();
+
+  const timerState = getTimerState(timerId);
+
+  const timeRemaining = timerState?.timeRemaining ?? 0;
+  const isActive = timerState?.isActive ?? false;
 
   const start = useCallback(
     (customDuration?: number) => {
       const restDuration = customDuration ?? duration;
-      setTimeRemaining(restDuration);
-      setIsActive(true);
-
-      intervalRef.current = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            setIsActive(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startTimer(timerId, restDuration);
     },
-    [duration],
+    [timerId, duration, startTimer],
   );
 
   const stop = useCallback(() => {
-    setIsActive(false);
-    setTimeRemaining(0);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+    stopTimer(timerId);
+  }, [timerId, stopTimer]);
 
   const skip = useCallback(() => {
-    stop();
-  }, [stop]);
+    skipTimer(timerId);
+  }, [timerId, skipTimer]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  const formatTime = useCallback((seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  }, []);
+  const formattedTime = useMemo(() => {
+    return formatTime(timeRemaining);
+  }, [timeRemaining, formatTime]);
 
   return {
     timeRemaining,
@@ -64,7 +43,7 @@ export function useRestTimer(duration: number = 60) {
     start,
     stop,
     skip,
-    formatTime: () => formatTime(timeRemaining),
+    formatTime: () => formattedTime,
     isFinished: timeRemaining === 0 && !isActive,
   };
 }
