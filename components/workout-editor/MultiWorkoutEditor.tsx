@@ -78,10 +78,36 @@ export function ProgramEditor({
       }
     }
 
+    // Check if there are existing active workouts that will be deprecated
+    const existingActiveWorkouts = await WorkoutService.getActiveWorkouts();
+    const hasExistingWorkouts = existingActiveWorkouts.length > 0;
+
+    if (hasExistingWorkouts) {
+      Alert.alert(
+        "Replace Existing Workouts",
+        `You have ${existingActiveWorkouts.length} active workout${existingActiveWorkouts.length > 1 ? "s" : ""} that will be marked as inactive when you save this new program. This action cannot be undone. Continue?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Replace",
+            style: "destructive",
+            onPress: () => saveProgramWithDeprecation(),
+          },
+        ],
+      );
+    } else {
+      await saveProgramWithDeprecation();
+    }
+  }, [validateWorkoutInput, workouts, saveProgramWithDeprecation]);
+
+  const saveProgramWithDeprecation = useCallback(async () => {
     try {
       setIsSaving(true);
 
-      // Save all workouts
+      // Deprecate all existing active workouts
+      await WorkoutService.deprecateAllActiveWorkouts();
+
+      // Save all new workouts
       for (const workout of workouts) {
         // Create workout
         const workoutId = await WorkoutService.createWorkout(workout);
@@ -100,7 +126,7 @@ export function ProgramEditor({
           : `${workouts.length}-workout program`;
       Alert.alert(
         "Success",
-        `Your ${programName} has been created successfully!`,
+        `Your ${programName} has been created successfully! All previous workouts have been marked as inactive.`,
         [{ text: "OK", onPress: () => router.back() }],
       );
     } catch (err) {
@@ -109,7 +135,7 @@ export function ProgramEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [validateWorkoutInput, workouts]);
+  }, [workouts]);
 
   return (
     <ThemedView style={styles.container}>

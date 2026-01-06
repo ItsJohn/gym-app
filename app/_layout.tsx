@@ -79,7 +79,7 @@ export default function RootLayout() {
               Database Error
             </Text>
             <Text style={{ textAlign: "center", color: "#666" }}>
-              {dbError}
+              {typeof dbError === "string" ? dbError : String(dbError)}
             </Text>
           </>
         ) : (
@@ -110,6 +110,10 @@ export default function RootLayout() {
               <Stack.Screen name="workout" options={{ headerShown: false }} />
               <Stack.Screen
                 name="workout-editor"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="workout-preview"
                 options={{ headerShown: false }}
               />
               <Stack.Screen name="+not-found" />

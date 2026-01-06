@@ -122,6 +122,12 @@ export class WorkoutService {
     await executeQuery("DELETE FROM workouts WHERE id = ?", [id]);
   }
 
+  static async deprecateAllActiveWorkouts(): Promise<void> {
+    await executeQuery(
+      "UPDATE workouts SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE is_active = 1",
+    );
+  }
+
   static async getWorkoutsNeedingRenewal(): Promise<Workout[]> {
     const workouts = await getAllRows<Workout>(
       `SELECT * FROM workouts

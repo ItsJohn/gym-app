@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -9,6 +9,7 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { GeminiService } from "@/services/geminiService";
 import {
   validateWorkoutGoals,
@@ -26,6 +27,17 @@ export default function AIWorkoutCreator({
   onWorkoutProgramGenerated,
   onCancel,
 }: Readonly<AIWorkoutCreatorProps>) {
+  const placeholderTextColor = useThemeColor({}, "tabIconDefault");
+  const textInputBackgroundColor = useThemeColor(
+    { light: "rgba(74, 144, 226, 0.05)", dark: "rgba(255, 255, 255, 0.1)" },
+    "background",
+  );
+  const textInputBorderColor = useThemeColor(
+    { light: "rgba(74, 144, 226, 0.3)", dark: "rgba(255, 255, 255, 0.3)" },
+    "tint",
+  );
+  const textInputTextColor = useThemeColor({}, "text");
+
   const [goals, setGoals] = useState("Build muscle and strength");
   const [issues, setIssues] = useState("");
   const [experience, setExperience] = useState<
@@ -127,6 +139,15 @@ export default function AIWorkoutCreator({
     onWorkoutProgramGenerated,
   ]);
 
+  const textInputStyle = [
+    styles.textInput,
+    {
+      backgroundColor: textInputBackgroundColor,
+      borderColor: textInputBorderColor,
+      color: textInputTextColor,
+    },
+  ];
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <ThemedView style={styles.content}>
@@ -148,11 +169,11 @@ export default function AIWorkoutCreator({
               tone up&quot;, &quot;Improve endurance&quot;
             </ThemedText>
             <TextInput
-              style={[styles.textInput, styles.textArea]}
+              style={[textInputStyle, styles.textArea]}
               value={goals}
               onChangeText={setGoals}
               placeholder="Describe what you want to achieve..."
-              placeholderTextColor="rgba(0,0,0,0.5)"
+              placeholderTextColor={placeholderTextColor}
               multiline
               numberOfLines={3}
             />
@@ -167,11 +188,11 @@ export default function AIWorkoutCreator({
               &quot;Shoulder mobility issues&quot;
             </ThemedText>
             <TextInput
-              style={[styles.textInput, styles.textArea]}
+              style={[textInputStyle, styles.textArea]}
               value={issues}
               onChangeText={setIssues}
               placeholder="Any injuries, pain, or limitations? (optional)"
-              placeholderTextColor="rgba(0,0,0,0.5)"
+              placeholderTextColor={placeholderTextColor}
               multiline
               numberOfLines={2}
             />
@@ -204,11 +225,11 @@ export default function AIWorkoutCreator({
               How many days per week do you want to train? (1-7 days)
             </ThemedText>
             <TextInput
-              style={styles.textInput}
+              style={textInputStyle}
               value={trainingDaysPerWeek}
               onChangeText={setTrainingDaysPerWeek}
               placeholder="3"
-              placeholderTextColor="rgba(0,0,0,0.5)"
+              placeholderTextColor={placeholderTextColor}
               keyboardType="numeric"
               maxLength={1}
             />
@@ -222,11 +243,11 @@ export default function AIWorkoutCreator({
               How long do you want each workout session to be?
             </ThemedText>
             <TextInput
-              style={styles.textInput}
+              style={textInputStyle}
               value={timeAvailable}
               onChangeText={setTimeAvailable}
               placeholder="60"
-              placeholderTextColor="rgba(0,0,0,0.5)"
+              placeholderTextColor={placeholderTextColor}
               keyboardType="numeric"
             />
           </ThemedView>
@@ -307,11 +328,9 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: "rgba(74, 144, 226, 0.3)",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: "rgba(74, 144, 226, 0.05)",
   },
   textArea: {
     height: 80,

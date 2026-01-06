@@ -1,8 +1,8 @@
-import React from "react";
 import { Alert, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 import { Exercise, Workout } from "@/validation/schemas";
 import { ExerciseCard } from "./ExerciseCard";
@@ -18,6 +18,16 @@ export function WorkoutForm({
   onWorkoutChange,
   showTitle = true,
 }: WorkoutFormProps) {
+  const placeholderTextColor = useThemeColor({}, "tabIconDefault");
+  const textInputBackgroundColor = useThemeColor(
+    { light: "rgba(74, 144, 226, 0.05)", dark: "rgba(255, 255, 255, 0.1)" },
+    "background",
+  );
+  const textInputBorderColor = useThemeColor(
+    { light: "rgba(74, 144, 226, 0.3)", dark: "rgba(255, 255, 255, 0.3)" },
+    "tint",
+  );
+  const textInputTextColor = useThemeColor({}, "text");
   const handleTitleChange = (title: string) => {
     onWorkoutChange({ ...workout, title });
   };
@@ -34,7 +44,7 @@ export function WorkoutForm({
         { text: "Cancel", style: "cancel" },
         {
           text: "Add",
-          onPress: (exerciseName) => {
+          onPress: (exerciseName: string | undefined) => {
             if (exerciseName?.trim()) {
               const newExercise: Exercise = {
                 id: `${exerciseName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}-${Math.random()}`,
@@ -77,7 +87,7 @@ export function WorkoutForm({
               { text: "Cancel", style: "cancel" },
               {
                 text: "Save",
-                onPress: (newName) => {
+                onPress: (newName: string | undefined) => {
                   if (newName?.trim()) {
                     const updatedExercises = workout.exercises.map(
                       (ex, index) =>
@@ -111,7 +121,7 @@ export function WorkoutForm({
               { text: "Cancel", style: "cancel" },
               {
                 text: "Next",
-                onPress: (sets) => {
+                onPress: (sets: string | undefined) => {
                   const setsNum = parseInt(sets || "0");
                   if (setsNum > 0) {
                     Alert.prompt(
@@ -121,7 +131,7 @@ export function WorkoutForm({
                         { text: "Cancel", style: "cancel" },
                         {
                           text: "Save",
-                          onPress: (reps) => {
+                          onPress: (reps: string | undefined) => {
                             const repsNum = parseInt(reps || "0");
                             if (repsNum > 0) {
                               const updatedExercises = workout.exercises.map(
@@ -182,17 +192,26 @@ export function WorkoutForm({
     );
   };
 
+  const textInputStyle = [
+    styles.textInput,
+    {
+      backgroundColor: textInputBackgroundColor,
+      borderColor: textInputBorderColor,
+      color: textInputTextColor,
+    },
+  ];
+
   return (
     <ThemedView style={styles.form}>
       {showTitle && (
         <ThemedView style={styles.inputGroup}>
           <ThemedText style={styles.label}>Workout Title *</ThemedText>
           <TextInput
-            style={styles.textInput}
+            style={textInputStyle}
             value={workout.title}
             onChangeText={handleTitleChange}
             placeholder="Enter workout title"
-            placeholderTextColor="rgba(0,0,0,0.5)"
+            placeholderTextColor={placeholderTextColor}
           />
         </ThemedView>
       )}
@@ -200,11 +219,11 @@ export function WorkoutForm({
       <ThemedView style={styles.inputGroup}>
         <ThemedText style={styles.label}>Description</ThemedText>
         <TextInput
-          style={[styles.textInput, styles.textArea]}
+          style={[textInputStyle, styles.textArea]}
           value={workout.description ?? undefined}
           onChangeText={handleDescriptionChange}
           placeholder="Enter workout description (optional)"
-          placeholderTextColor="rgba(0,0,0,0.5)"
+          placeholderTextColor={placeholderTextColor}
           multiline
           numberOfLines={3}
         />
@@ -261,11 +280,9 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: "rgba(74, 144, 226, 0.3)",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: "rgba(74, 144, 226, 0.05)",
   },
   textArea: {
     height: 80,
