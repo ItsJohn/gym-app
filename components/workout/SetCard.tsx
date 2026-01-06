@@ -60,7 +60,7 @@ export default function SetCard({
   sessionSetId,
   weightUnit = "kg",
   lastSessionData,
-}: SetCardProps) {
+}: Readonly<SetCardProps>) {
   // Create a unique timer ID for this set
   const timerId = `set-${sessionSetId}`;
   const timer = useRestTimer(timerId, exercise.rest_seconds ?? undefined);

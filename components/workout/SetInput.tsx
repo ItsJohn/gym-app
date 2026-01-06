@@ -29,7 +29,7 @@ export default function SetInput({
   onComplete,
   weightUnit = "kg",
   lastSessionData,
-}: SetInputProps) {
+}: Readonly<SetInputProps>) {
   const initialDuration = exercise.type === "duration" ? reps || 30 : 30;
   const countdown = useCountdown(initialDuration);
 
@@ -90,14 +90,14 @@ export default function SetInput({
   const weightOptions = useMemo(() => {
     const options = [];
     if (weightUnit === "kg") {
-      for (let i = 2.5; i <= 500; i += 2.5) {
+      for (let i = 0; i <= 500; i += 2.5) {
         options.push({
           label: i.toString(),
           value: i,
         });
       }
     } else {
-      for (let i = 5; i <= 1000; i += 5) {
+      for (let i = 0; i <= 1000; i += 5) {
         options.push({
           label: i.toString(),
           value: i,
@@ -147,7 +147,7 @@ export default function SetInput({
             // Allow 1 to 200% of target reps, with a minimum of 1 and maximum of 200
             const maxReps = Math.min(
               200,
-              Math.max(1, Math.ceil(targetReps * 2)),
+              Math.max(0, Math.ceil(targetReps * 2)),
             );
             return maxReps;
 

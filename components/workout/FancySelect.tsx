@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useScrollTimeout } from "@/hooks";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import React, { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Modal, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 
 interface FancySelectProps {
@@ -21,7 +21,7 @@ export default function FancySelect({
   onValueChange,
   placeholder = "Select...",
   suffix = "",
-}: FancySelectProps) {
+}: Readonly<FancySelectProps>) {
   const textColor = useThemeColor(
     { light: "#4A90E2", dark: "#000000" },
     "text",
