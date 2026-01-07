@@ -1,6 +1,8 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
+import { WorkoutScheduleService } from "@/database/services/workoutScheduleService";
 import { WorkoutService } from "@/database/services/workoutService";
+import { WorkoutWithExercises } from "@/database/types";
 import { Workout } from "@/validation/schemas";
 
 export const workoutKeys = {
@@ -34,10 +36,11 @@ export const useWorkout = (id: number): UseQueryResult<Workout | null> => {
     staleTime: 5 * 60 * 1000,
   });
 };
-export const useTodaysWorkout = (): UseQueryResult<Workout | null> => {
-  return useQuery({
-    queryKey: workoutKeys.todaysWorkout(),
-    queryFn: () => WorkoutService.getTodaysWorkout(),
-    staleTime: 5 * 60 * 1000,
-  });
-};
+export const useTodaysWorkout =
+  (): UseQueryResult<WorkoutWithExercises | null> => {
+    return useQuery({
+      queryKey: workoutKeys.todaysWorkout(),
+      queryFn: () => WorkoutScheduleService.getTodaysWorkout(),
+      staleTime: 5 * 60 * 1000,
+    });
+  };

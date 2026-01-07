@@ -2,6 +2,7 @@ import { Exercise, Workout } from "@/validation/schemas";
 import { Session } from "@/validation/session";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
 import { ExerciseSet, WorkoutSessionWithDetails } from "../types";
+
 export class SessionService {
   static async createSession(session: Session): Promise<number> {
     const result = await executeQuery(
@@ -49,35 +50,6 @@ export class SessionService {
     await executeQuery("DELETE FROM workout_sessions WHERE id = ?", [
       sessionId,
     ]);
-  }
-
-  // Helper method to parse exercise sets and convert is_completed to boolean
-  private static parseExerciseSets(sets: any[]): ExerciseSet[] {
-    return sets.map((set) => ({
-      ...set,
-      is_completed: Boolean(set.is_completed),
-    }));
-  }
-
-  // Get sets for a session
-  static async getSetsBySessionId(sessionId: number): Promise<ExerciseSet[]> {
-    const sets = await getAllRows<ExerciseSet>(
-      "SELECT * FROM session_set WHERE session_id = ? ORDER BY exercise_id, set_number",
-      [sessionId],
-    );
-    return this.parseExerciseSets(sets);
-  }
-
-  // Get sets for a specific exercise in a session
-  static async getSetsBySessionAndExercise(
-    sessionId: number,
-    exerciseId: string,
-  ): Promise<ExerciseSet[]> {
-    const sets = await getAllRows<ExerciseSet>(
-      "SELECT * FROM session_set WHERE session_id = ? AND exercise_id = ? ORDER BY set_number",
-      [sessionId, exerciseId],
-    );
-    return this.parseExerciseSets(sets);
   }
 
   // Get session with full details (workout info and sets with exercises)
@@ -163,8 +135,8 @@ export class SessionService {
          COUNT(*) as total_sets,
          SUM(CASE WHEN is_completed = 1 THEN 1 ELSE 0 END) as completed_sets,
          COUNT(DISTINCT exercise_id) as total_exercises,
-         SUM(CASE WHEN weight IS NOT NULL AND is_completed = 1 THEN weight ELSE 0 END) as total_weight,
-         SUM(CASE WHEN reps IS NOT NULL AND is_completed = 1 THEN reps ELSE 0 END) as total_reps
+         SUM(CASE WHEN json_extract(target, '$.weight') IS NOT NULL AND is_completed = 1 THEN json_extract(target, '$.weight') ELSE 0 END) as total_weight,
+         SUM(CASE WHEN json_extract(target, '$.reps') IS NOT NULL AND is_completed = 1 THEN CAST(json_extract(target, '$.reps') AS INTEGER) ELSE 0 END) as total_reps
        FROM session_set
        WHERE session_id = ?`,
       [sessionId],

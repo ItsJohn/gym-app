@@ -131,7 +131,7 @@ export default function HomeScreen() {
       ) : incompleteSession ? (
         <ContinueWorkoutButton session={incompleteSession} />
       ) : (
-        <NextWorkout nextWorkout={nextWorkout} />
+        <NextWorkout nextWorkout={nextWorkout?.workout} />
       )}
 
       <QuickStats

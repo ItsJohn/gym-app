@@ -1,5 +1,6 @@
 import { SessionSet as SessionSetType } from "@/validation/sessionSets";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
+import { ExerciseSet } from "../types";
 import { ExerciseService } from "./exerciseService";
 
 export class SessionSetService {
@@ -114,5 +115,31 @@ export class SessionSetService {
       `UPDATE session_set SET ${setParts.join(", ")} WHERE id = ?`,
       values,
     );
+  }
+
+  private static parseExerciseSets(sets: ExerciseSet[]): ExerciseSet[] {
+    return sets.map((set) => ({
+      ...set,
+      is_completed: Boolean(set.is_completed),
+    }));
+  }
+
+  static async getSetsBySessionId(sessionId: number): Promise<ExerciseSet[]> {
+    const sets = await getAllRows<ExerciseSet>(
+      "SELECT * FROM session_set WHERE session_id = ? ORDER BY exercise_id, set_number",
+      [sessionId],
+    );
+    return this.parseExerciseSets(sets);
+  }
+
+  static async getSetsBySessionAndExercise(
+    sessionId: number,
+    exerciseId: string,
+  ): Promise<ExerciseSet[]> {
+    const sets = await getAllRows<ExerciseSet>(
+      "SELECT * FROM session_set WHERE session_id = ? AND exercise_id = ? ORDER BY set_number",
+      [sessionId, exerciseId],
+    );
+    return this.parseExerciseSets(sets);
   }
 }

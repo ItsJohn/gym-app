@@ -37,7 +37,7 @@ export const workoutKeys = {
 export const useNextWorkout = () => {
   return useQuery({
     queryKey: workoutKeys.nextWorkout(),
-    queryFn: () => WorkoutService.getNextWorkout(),
+    queryFn: () => WorkoutScheduleService.getNextScheduledWorkout(),
     staleTime: 5 * 60 * 1000,
   });
 };

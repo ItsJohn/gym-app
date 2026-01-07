@@ -1,6 +1,6 @@
 import { Exercise, Workout } from "@/validation/schemas";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
-import { DayOfWeek, DAYS_OF_WEEK, WorkoutWithExercises } from "../types";
+import { WorkoutWithExercises } from "../types";
 
 // Helper function to convert is_active from number to boolean
 const convertWorkoutToBoolean = (workout: any): Workout => ({
@@ -46,39 +46,6 @@ export class WorkoutService {
       [id],
     );
     return workout ? convertWorkoutToBoolean(workout) : null;
-  }
-
-  static async getTodaysWorkout(): Promise<Workout | null> {
-    const workout = await getFirstRow<Workout>(
-      "SELECT * FROM workouts WHERE day_of_week = ? AND is_active = 1",
-      [new Date().toLocaleDateString("en-US", { weekday: "long" })],
-    );
-    return workout ? convertWorkoutToBoolean(workout) : null;
-  }
-
-  static async getNextWorkout(): Promise<Workout | undefined> {
-    const today = DAYS_OF_WEEK[new Date().getDay()];
-
-    // Get all active workouts
-    const workouts = await this.getActiveWorkouts();
-    if (!workouts.length) {
-      return undefined;
-    }
-
-    const days = [...DAYS_OF_WEEK, ...DAYS_OF_WEEK];
-    const workoutSchedule = workouts.reduce<Record<DayOfWeek, Workout>>(
-      (acc, workout) => ({ ...acc, [workout.day_of_week!]: workout }),
-      {} as Record<DayOfWeek, Workout>,
-    );
-    const workoutWeek = days.reduce<Record<DayOfWeek, Workout | undefined>>(
-      (acc, day) => ({ ...acc, [day]: workoutSchedule[day] }),
-      {} as Record<DayOfWeek, Workout | undefined>,
-    );
-    const todayIdx = days.indexOf(today);
-    days.splice(todayIdx, 0, days[todayIdx]);
-
-    const nextWorkoutDay = days.find((key) => workoutWeek[key]);
-    return nextWorkoutDay ? workoutWeek[nextWorkoutDay] : undefined;
   }
 
   static async getWorkoutWithExercises(
