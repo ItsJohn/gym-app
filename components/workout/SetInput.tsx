@@ -46,12 +46,14 @@ export default function SetInput({
   }, [countdown.isFinished, onComplete]);
 
   // Preselect last session values if no current values are set
+  // Note: For weight, we check !weight because 0 is a valid "unset" state that should be overwritten
+  // For reps, we must check === undefined because target reps auto-initialize to a positive number
   useEffect(() => {
     if (lastSessionData && !weight && lastSessionData.weight) {
       onWeightChange(lastSessionData.weight);
     }
 
-    if (lastSessionData && !reps) {
+    if (lastSessionData && reps === undefined) {
       if (exercise.type === "distance" && lastSessionData.distance) {
         onRepsChange(lastSessionData.distance);
       } else if (exercise.type !== "distance" && lastSessionData.reps) {

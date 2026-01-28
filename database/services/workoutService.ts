@@ -105,4 +105,14 @@ export class WorkoutService {
     );
     return workouts.map(convertWorkoutToBoolean);
   }
+
+  static async getLatestActiveWorkout(): Promise<Workout | null> {
+    const workout = await getFirstRow<Workout>(
+      `SELECT * FROM workouts
+       WHERE is_active = 1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+    );
+    return workout ? convertWorkoutToBoolean(workout) : null;
+  }
 }

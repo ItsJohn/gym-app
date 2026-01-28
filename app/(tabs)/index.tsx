@@ -8,6 +8,7 @@ import {
   NextWorkout,
   QuickStats,
   RecentActivity,
+  WorkoutRenewalBanner,
 } from "@/components/home";
 import ContinueWorkoutButton from "@/components/home/ContinueWorkoutButton";
 import SchedulePreview from "@/components/home/SchedulePreview";
@@ -24,6 +25,7 @@ import {
   useNextWorkout,
   useTodaysWorkout,
   useTodaysWorkoutCompletion,
+  useWorkoutRenewalNotice,
 } from "@/hooks";
 import { Session } from "@/validation/session";
 
@@ -45,6 +47,7 @@ export default function HomeScreen() {
     data: todaysWorkoutCompleted,
     isLoading: isTodaysWorkoutCompletedLoading,
   } = useTodaysWorkoutCompletion();
+  const { data: renewalNotice } = useWorkoutRenewalNotice();
 
   const loadHomeData = useCallback(async () => {
     try {
@@ -123,6 +126,10 @@ export default function HomeScreen() {
       headerImage={<GymLogo />}
     >
       <HomeHeader />
+
+      {renewalNotice?.shouldShowNotice && (
+        <WorkoutRenewalBanner weeksOld={renewalNotice.weeksOld} />
+      )}
 
       {todaysWorkoutCompleted ? (
         <WorkoutCompleteButton workout={todaysWorkout!} />

@@ -79,7 +79,14 @@ export class WorkoutScheduleService {
 
     if (!schedule) return null;
 
-    return await WorkoutService.getWorkoutWithExercises(schedule.workout_id);
+    const workout = await WorkoutService.getWorkoutWithExercises(
+      schedule.workout_id,
+    );
+
+    // Only return the workout if it's active
+    if (!workout || !workout.is_active) return null;
+
+    return workout;
   }
 
   // Get all workouts with their assigned days
@@ -117,7 +124,8 @@ export class WorkoutScheduleService {
       const workout = await WorkoutService.getWorkoutWithExercises(
         schedule.workout_id,
       );
-      if (workout) {
+      // Only include workouts that exist and are active
+      if (workout && workout.is_active) {
         weeklySchedule[schedule.day_of_week] = workout;
       }
     }
@@ -182,7 +190,8 @@ export class WorkoutScheduleService {
       const workout = await WorkoutService.getWorkoutWithExercises(
         schedule.workout_id,
       );
-      if (workout) {
+      // Only include workouts that exist and are active
+      if (workout && workout.is_active) {
         schedulesWithWorkouts.push({
           ...schedule,
           workout,

@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/workout/EmptyState";
 import { ScheduleInfo } from "@/components/workout/ScheduleInfo";
 import { WorkoutCard } from "@/components/workout/WorkoutCard";
 import WorkoutScheduleManager from "@/components/workout/WorkoutScheduleManager";
-import { useDeleteWorkout, useWorkouts } from "@/hooks";
+import { useActiveWorkouts, useDeleteWorkout } from "@/hooks";
 import { Workout } from "@/validation/schemas";
 
 export default function WorkoutsScreen() {
@@ -22,7 +22,7 @@ export default function WorkoutsScreen() {
     isLoading,
     error,
     refetch: loadWorkouts,
-  } = useWorkouts();
+  } = useActiveWorkouts();
 
   const deleteWorkoutMutation = useDeleteWorkout();
 

@@ -167,3 +167,4 @@ export * from "./service";
 export { useLastSessionDataForExercise } from "./service/session";
 export { useLatestWorkoutStats } from "./useLatestWorkoutStats";
 export { useSessionStats } from "./useSessionStats";
+export { useWorkoutRenewalNotice } from "./useWorkoutRenewalNotice";
