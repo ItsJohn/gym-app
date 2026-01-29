@@ -1,6 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
-import { Alert, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -9,95 +7,27 @@ import { ThemedView } from "@/components/ThemedView";
 import SingleExerciseStep from "@/components/workout/SingleExerciseStep";
 import WorkoutComplete from "@/components/workout/WorkoutComplete";
 import WorkoutProgressBar from "@/components/workout/WorkoutProgressBar";
-import { useSettings } from "@/contexts/SettingsContext";
-import { SessionService } from "@/database/services/sessionService";
-import { useExercisesByWorkout, useWorkout } from "@/hooks";
-import { Exercise } from "@/validation/schemas";
-
-interface SessionStep {
-  type: "exercise" | "complete";
-  exercise?: Exercise;
-}
+import { useWorkoutSession } from "@/hooks/useWorkoutSession";
 
 export default function WorkoutScreen() {
-  const { settings } = useSettings();
-  const { workoutId, sessionId } = useLocalSearchParams<{
-    workoutId: string;
-    sessionId: string;
-  }>();
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [showDescription, setShowDescription] = useState(false);
-  const { data: workout, isLoading: isWorkoutLoading } = useWorkout(
-    parseInt(workoutId),
-  );
-  const { data: exerciseList, isLoading: isExerciseListLoading } =
-    useExercisesByWorkout(parseInt(workoutId));
-
-  const sessionSteps = useMemo(() => {
-    const steps: SessionStep[] =
-      exerciseList?.map((exercise) => ({ type: "exercise", exercise })) ?? [];
-    return [...steps, { type: "complete" }];
-  }, [exerciseList]);
-
-  const currentStep = useMemo(
-    () => sessionSteps[currentStepIndex],
-    [sessionSteps, currentStepIndex],
-  );
-
-  const handleSetValueChange = useCallback(
-    (setIndex: number, value: string | number) => {
-      // TODO: Update set value in session
-      console.log(`Set ${setIndex} value changed to:`, value);
-    },
-    [],
-  );
-
-  const handleSetComplete = useCallback((setIndex: number) => {
-    // TODO: Complete set in session
-    console.log(`Set ${setIndex} completed`);
-  }, []);
-
-  const handlePrevious = useCallback(() => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
-      setShowDescription(settings.showExerciseDescriptions);
-    }
-  }, [currentStepIndex, settings.showExerciseDescriptions]);
-
-  const handleNext = useCallback(() => {
-    if (currentStepIndex < sessionSteps.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
-      setShowDescription(settings.showExerciseDescriptions);
-    }
-  }, [currentStepIndex, sessionSteps, settings.showExerciseDescriptions]);
-
-  const finishWorkout = useCallback(async () => {
-    if (!sessionId) return;
-
-    try {
-      // Complete the session in database
-      await SessionService.completeSession(
-        sessionId,
-        "Workout completed successfully",
-      );
-
-      // Get session stats for the completion message
-      const stats = await SessionService.getSessionStats(parseInt(sessionId));
-
-      Alert.alert(
-        "Workout Complete! 🎉",
-        `Great job! You completed ${stats.completed_sets} sets with a total of ${Math.round(stats.total_weight)} ${settings.weightUnit} lifted.`,
-        [{ text: "OK", onPress: () => router.back() }],
-      );
-    } catch (err) {
-      console.error("Error finishing workout:", err);
-      Alert.alert(
-        "Workout Complete!",
-        "Congratulations on completing your workout!",
-        [{ text: "OK", onPress: () => router.back() }],
-      );
-    }
-  }, [sessionId, settings.weightUnit]);
+  const {
+    workoutId,
+    workout,
+    exerciseList,
+    isLoading,
+    currentStepIndex,
+    currentStep,
+    sessionSteps,
+    showDescription,
+    setShowDescription,
+    canGoBack,
+    canGoForward,
+    handleSetValueChange,
+    handleSetComplete,
+    handlePrevious,
+    handleNext,
+    finishWorkout,
+  } = useWorkoutSession();
 
   if (!workoutId) {
     return (
@@ -107,7 +37,7 @@ export default function WorkoutScreen() {
     );
   }
 
-  if (isWorkoutLoading || isExerciseListLoading) {
+  if (isLoading) {
     return (
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
@@ -119,9 +49,6 @@ export default function WorkoutScreen() {
       </ParallaxScrollView>
     );
   }
-
-  const canGoBack = currentStepIndex > 0;
-  const canGoForward = currentStepIndex < sessionSteps.length - 1;
 
   return (
     <ParallaxScrollView

@@ -1,5 +1,5 @@
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { router } from "expo-router";
+import { useCallback } from "react";
 import { StyleSheet } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -18,8 +18,7 @@ import { EmptyState } from "@/components/landing/EmptyState";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { SessionService } from "@/database/services/sessionService";
-import { WorkoutService } from "@/database/services/workoutService";
+import { useHomeData } from "@/hooks/useHomeData";
 import {
   useMostRecentIncompleteSession,
   useNextWorkout,
@@ -27,16 +26,9 @@ import {
   useTodaysWorkoutCompletion,
   useWorkoutRenewalNotice,
 } from "@/hooks";
-import { Session } from "@/validation/session";
 
 export default function HomeScreen() {
-  const [stats, setStats] = useState({
-    totalWorkouts: 0,
-    recentSessions: 0,
-    thisWeekSessions: 0,
-  });
-  const [recentSession, setRecentSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { stats, recentSession, isLoading } = useHomeData();
   const { data: todaysWorkout, isLoading: isTodaysWorkoutLoading } =
     useTodaysWorkout();
   const { data: nextWorkout, isLoading: isNextWorkoutLoading } =
@@ -48,45 +40,6 @@ export default function HomeScreen() {
     isLoading: isTodaysWorkoutCompletedLoading,
   } = useTodaysWorkoutCompletion();
   const { data: renewalNotice } = useWorkoutRenewalNotice();
-
-  const loadHomeData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-
-      // Load stats
-      const workouts = await WorkoutService.getAllWorkouts();
-      const sessions = await SessionService.getRecentSessions(10);
-
-      // Calculate this week's sessions
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const thisWeekSessions = sessions.filter(
-        (s) => s.started_at && new Date(s.started_at) >= oneWeekAgo,
-      ).length;
-
-      setStats({
-        totalWorkouts: workouts.length,
-        recentSessions: sessions.length,
-        thisWeekSessions,
-      });
-
-      // Get most recent session
-      if (sessions.length > 0) {
-        setRecentSession(sessions[0]);
-      }
-    } catch (err) {
-      console.error("Error loading home data:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Load data on initial mount and refresh when screen comes back into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadHomeData();
-    }, [loadHomeData]),
-  );
 
   const handleManageWorkouts = useCallback(() => {
     router.push("/(tabs)/workouts");
@@ -152,7 +105,6 @@ export default function HomeScreen() {
         onViewHistory={handleViewHistory}
       />
 
-      {/* <VisualStats /> */}
       <SchedulePreview onViewAllPress={handleManageWorkouts} />
     </ParallaxScrollView>
   );

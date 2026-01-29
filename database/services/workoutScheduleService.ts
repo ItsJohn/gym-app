@@ -101,10 +101,7 @@ export class WorkoutScheduleService {
       return {
         ...workout,
         dayOfWeek: schedule?.day_of_week,
-        dayName:
-          schedule?.day_of_week !== undefined
-            ? DAYS_OF_WEEK[schedule.day_of_week]
-            : undefined,
+        dayName: schedule?.day_of_week,
         isScheduled: !!schedule,
       };
     });
