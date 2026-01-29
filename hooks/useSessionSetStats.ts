@@ -14,10 +14,20 @@ interface SessionStats {
   completion_rate: number;
 }
 
+const parseNumeric = (value: string | number | null | undefined): number => {
+  if (value == null) return 0;
+  if (typeof value === "number") return value;
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 export const useSessionSetStats = (sessionId: number) => {
   const { data: sessionSets } = useSessionSetsBySessionId(sessionId);
   return useQuery({
-    queryKey: sessionKeys.sessionStats(sessionId),
+    queryKey: [
+      ...sessionKeys.sessionStats(sessionId),
+      sessionSets?.length ?? 0,
+    ],
     queryFn: async (): Promise<SessionStats> => {
       if (!sessionSets || sessionSets.length === 0) {
         return {
@@ -67,21 +77,17 @@ export const useSessionSetStats = (sessionId: number) => {
         exerciseCompletion.values(),
       ).filter((stats) => stats.completed === stats.total).length;
 
-      // Calculate totals for different metrics
       let total_weight = 0;
       let total_reps = 0;
+      let total_duration = 0;
+      let total_distance = 0;
 
       sessionSets.forEach((set) => {
-        if (set.is_completed) {
-          // Add weight if available
-          if (set.target && typeof set.target.weight === "number") {
-            total_weight += set.target.weight;
-          }
-
-          // Add reps if available
-          if (set.target && typeof set.target.reps === "number") {
-            total_reps += set.target.reps;
-          }
+        if (set.is_completed && set.target) {
+          total_weight += parseNumeric(set.target.weight);
+          total_reps += parseNumeric(set.target.reps);
+          total_duration += parseNumeric(set.target.duration);
+          total_distance += parseNumeric(set.target.distance);
         }
       });
 
@@ -94,13 +100,13 @@ export const useSessionSetStats = (sessionId: number) => {
         total_exercises,
         total_weight,
         total_reps,
-        total_duration: 0, // Not available from session sets alone
-        total_distance: 0, // Not available from session sets alone
+        total_duration,
+        total_distance,
         exercises_completed,
         completion_rate,
       };
     },
-    enabled: !!sessionId,
-    staleTime: 30 * 1000, // 30 seconds
+    enabled: !!sessionId && !!sessionSets,
+    staleTime: 30 * 1000,
   });
 };

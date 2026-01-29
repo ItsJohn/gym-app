@@ -3,12 +3,15 @@ import { ThemedView } from "@/components/ThemedView";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import ExerciseDescription from "./ExerciseDescription";
+import ExerciseStats from "./ExerciseStats";
 
 interface ExerciseHeaderProps {
   exerciseName: string;
   notes?: string;
   videoUrl?: string;
   muscleGroup?: string;
+  exerciseId?: string;
+  weightUnit?: "kg" | "lbs";
 }
 
 export default function ExerciseHeader({
@@ -16,6 +19,8 @@ export default function ExerciseHeader({
   notes,
   videoUrl,
   muscleGroup,
+  exerciseId,
+  weightUnit,
 }: ExerciseHeaderProps) {
   const [showDescription, setShowDescription] = useState(false);
 
@@ -31,16 +36,27 @@ export default function ExerciseHeader({
         onPress={() => setShowDescription(!showDescription)}
       >
         <ThemedText style={styles.descriptionButtonText}>
-          {showDescription ? "Hide" : "Show"} Exercise Description
+          {showDescription ? "Hide" : "Show"} Exercise Info
         </ThemedText>
       </TouchableOpacity>
 
-      {showDescription && notes && (
-        <ExerciseDescription
-          description={notes}
-          videoUrl={videoUrl}
-          isVisible={showDescription}
-        />
+      {showDescription && (
+        <>
+          {notes && (
+            <ExerciseDescription
+              description={notes}
+              videoUrl={videoUrl}
+              isVisible={showDescription}
+            />
+          )}
+          {exerciseId && (
+            <ExerciseStats
+              exerciseId={exerciseId}
+              exerciseName={exerciseName}
+              weightUnit={weightUnit}
+            />
+          )}
+        </>
       )}
     </ThemedView>
   );

@@ -113,6 +113,8 @@ export default function SingleExerciseStep({
             muscleGroup={exercise.muscle_group}
             notes={exercise.notes ?? undefined}
             videoUrl={exercise.video_url || undefined}
+            exerciseId={exercise.id!.toString()}
+            weightUnit={weightUnit}
           />
 
           <ExerciseInfo
