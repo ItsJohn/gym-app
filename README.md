@@ -42,20 +42,22 @@ The app features an intuitive interface for tracking workouts, managing exercise
 
 ## Tech Stack
 
-- **Framework**: React Native with Expo
-- **Navigation**: Expo Router with file-based routing
-- **State Management**: TanStack Query for server state
-- **Database**: SQLite with Expo SQLite
+- **Framework**: React Native 0.81 + Expo 54 + React 19
+- **Navigation**: Expo Router with file-based routing (typed routes)
+- **State Management**: TanStack React Query + React Context
+- **Database**: SQLite via expo-sqlite
+- **Charts**: Victory Native + @shopify/react-native-skia
 - **AI Integration**: Google Gemini AI for workout generation
 - **UI Components**: Custom themed components with React Native
-- **Testing**: Jest with React Native Testing Library
-- **Code Quality**: ESLint, Prettier, Husky for git hooks
+- **Testing**: Jest with React Testing Library
+- **Code Quality**: ESLint 9 (flat config), Prettier, Husky + lint-staged
+- **Build & Deploy**: EAS Build (development, preview, production profiles)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (version specified in `.nvmrc`)
+- Node.js v22.14.0 (see `.nvmrc`)
 - npm or yarn package manager
 - Expo CLI (`npm install -g @expo/cli`)
 - iOS Simulator (for iOS development) or Android Studio (for Android development)
@@ -119,16 +121,31 @@ The app uses local SQLite storage, so no additional environment variables are re
 
 ```
 gym-sweat-tears/
-├── app/                    # Main application screens (file-based routing)
-│   ├── (tabs)/            # Tab navigation screens
+├── app/                    # Expo Router screens (file-based routing)
+│   ├── (tabs)/            # Tab navigation (home, workouts, history, analytics, settings)
 │   ├── workout.tsx        # Active workout session
-│   └── workout-editor.tsx # Workout creation/editing
-├── components/            # Reusable UI components
-├── database/             # SQLite database services and schemas
+│   ├── workout-editor.tsx # Workout creation/editing
+│   └── workout-preview.tsx # Workout preview before starting
+├── components/            # React components organized by feature
+│   ├── ui/               # Base UI components
+│   ├── home/             # Home screen components
+│   ├── workout/          # Workout session components
+│   ├── workout-editor/   # Workout creation (AI + manual)
+│   ├── workout-preview/  # Workout preview components
+│   ├── history/          # History screen components
+│   ├── analytics/        # Chart components (PR, weight, frequency)
+│   └── settings/         # Settings screen components
+├── database/             # SQLite database layer
+│   ├── services/         # CRUD operations per entity
+│   ├── schema.ts         # Table definitions
+│   └── types.ts          # TypeScript interfaces
 ├── hooks/                # Custom React hooks
-├── services/             # External service integrations (AI, etc.)
+│   └── service/          # React Query wrappers for DB services
+├── contexts/             # React Context providers (Settings, WorkoutTimer)
+├── services/             # External APIs (Gemini AI, YouTube verification)
 ├── validation/           # Zod validation schemas
-└── constants/            # App constants and configuration
+├── constants/            # Colors, theme values
+└── assets/               # Fonts and images
 ```
 
 ## Contributing
