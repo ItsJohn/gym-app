@@ -1,5 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import { ALL_TABLES } from "./schema";
+import { ALL_TABLES, MIGRATIONS } from "./schema";
 
 const DATABASE_NAME = "gym_app.db";
 
@@ -23,6 +23,15 @@ export const initializeDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
     // Create all tables and indexes
     for (const tableSQL of ALL_TABLES) {
       await db.execAsync(tableSQL);
+    }
+
+    // Run migrations (ignore errors for already-existing columns)
+    for (const migration of MIGRATIONS) {
+      try {
+        await db.execAsync(migration);
+      } catch {
+        // Column likely already exists
+      }
     }
 
     console.log("Database initialized successfully");

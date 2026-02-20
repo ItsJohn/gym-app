@@ -27,6 +27,16 @@ export const WorkoutGoalsSchema = z.object({
       "cardio",
     ])
     .nullish(),
+  previousProgram: z
+    .array(
+      z.object({
+        title: z.string(),
+        exercises: z.array(
+          z.object({ name: z.string(), muscle_group: z.string() }),
+        ),
+      }),
+    )
+    .nullish(),
 });
 
 // Exercise schema for the unified workout structure
@@ -59,6 +69,12 @@ export const WorkoutSchema = z
     is_active: z.boolean().nullish(),
     created_at: z.string().nullish(),
     updated_at: z.string().nullish(),
+    // AI generation inputs
+    ai_goals: z.string().nullish(),
+    ai_issues: z.string().nullish(),
+    ai_experience: z.enum(["beginner", "intermediate", "advanced"]).nullish(),
+    ai_time_available: z.number().nullish(),
+    ai_training_days: z.number().nullish(),
   })
   .transform((data) => {
     const today = new Date();

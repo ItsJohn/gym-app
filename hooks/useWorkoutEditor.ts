@@ -7,11 +7,30 @@ import {
   validateExercise,
   validateWorkout,
   Workout,
+  WorkoutGoals,
 } from "@/validation/schemas";
+import { AIWorkoutResult } from "@/components/workout-editor/AIWorkoutCreator";
 
 export function useWorkoutEditor() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, regenerate } = useLocalSearchParams<{
+    id?: string;
+    regenerate?: string;
+  }>();
   const isEditing = !!id;
+  const isRegenerating = regenerate === "true";
+
+  const [aiInitialValues, setAiInitialValues] = useState<
+    | {
+        goals: string;
+        issues: string;
+        experience: "beginner" | "intermediate" | "advanced";
+        timeAvailable: string;
+        trainingDaysPerWeek: string;
+      }
+    | undefined
+  >(undefined);
+  const [previousProgram, setPreviousProgram] =
+    useState<WorkoutGoals["previousProgram"]>(undefined);
 
   const [workout, setWorkout] = useState<Workout>({
     title: "",
@@ -52,10 +71,52 @@ export function useWorkoutEditor() {
     }
   }, [id, isEditing, loadWorkout]);
 
-  const handleAIWorkoutProgramGenerated = useCallback(
-    async (workouts: Workout[]) => {
+  useEffect(() => {
+    if (!isRegenerating) return;
+    (async () => {
       try {
-        setGeneratedWorkouts(workouts);
+        const latest = await WorkoutService.getLatestActiveWorkout();
+        if (!latest?.id) return;
+        const withExercises = await WorkoutService.getWorkoutWithExercises(
+          latest.id,
+        );
+        if (!withExercises) return;
+
+        setAiInitialValues({
+          goals: latest.ai_goals ?? "Build muscle and strength",
+          issues: latest.ai_issues ?? "",
+          experience: latest.ai_experience ?? "intermediate",
+          timeAvailable: String(latest.ai_time_available ?? 60),
+          trainingDaysPerWeek: String(latest.ai_training_days ?? 3),
+        });
+
+        setPreviousProgram([
+          {
+            title: withExercises.title,
+            exercises: withExercises.exercises.map((e) => ({
+              name: e.name,
+              muscle_group: e.muscle_group,
+            })),
+          },
+        ]);
+      } catch (err) {
+        console.error("Error loading previous workout for regenerate:", err);
+      }
+    })();
+  }, [isRegenerating]);
+
+  const handleAIWorkoutProgramGenerated = useCallback(
+    async ({ workouts, goals }: AIWorkoutResult) => {
+      try {
+        const workoutsWithGoals = workouts.map((w) => ({
+          ...w,
+          ai_goals: goals.goals,
+          ai_issues: goals.issues ?? null,
+          ai_experience: goals.experience,
+          ai_time_available: goals.timeAvailable,
+          ai_training_days: goals.trainingDaysPerWeek,
+        }));
+        setGeneratedWorkouts(workoutsWithGoals);
         setCreationMode("manual");
         setEditMode("program");
         Alert.alert(
@@ -182,5 +243,7 @@ export function useWorkoutEditor() {
     setEditMode,
     handleAIWorkoutProgramGenerated,
     handleSave,
+    aiInitialValues,
+    previousProgram,
   };
 }

@@ -29,6 +29,8 @@ export default function WorkoutEditorScreen() {
     setEditMode,
     handleAIWorkoutProgramGenerated,
     handleSave,
+    aiInitialValues,
+    previousProgram,
   } = useWorkoutEditor();
 
   if (isLoading) {
@@ -67,6 +69,8 @@ export default function WorkoutEditorScreen() {
           <AIWorkoutCreator
             onWorkoutProgramGenerated={handleAIWorkoutProgramGenerated}
             onCancel={() => setCreationMode("manual")}
+            initialValues={aiInitialValues}
+            previousProgram={previousProgram}
           />
         ) : editMode === "program" ? (
           <ProgramEditor

@@ -9,7 +9,7 @@ interface WorkoutRenewalBannerProps {
 
 export function WorkoutRenewalBanner({ weeksOld }: WorkoutRenewalBannerProps) {
   const handlePress = () => {
-    router.push("/workout-editor");
+    router.push("/workout-editor?regenerate=true");
   };
 
   return (

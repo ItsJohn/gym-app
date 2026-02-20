@@ -19,10 +19,23 @@ export const CREATE_WORKOUTS_TABLE = `
     day_of_week TEXT,
     suggested_playlist TEXT,
     is_active BOOLEAN DEFAULT 1,
+    ai_goals TEXT,
+    ai_issues TEXT,
+    ai_experience TEXT,
+    ai_time_available INTEGER,
+    ai_training_days INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `;
+
+export const MIGRATIONS = [
+  "ALTER TABLE workouts ADD COLUMN ai_goals TEXT;",
+  "ALTER TABLE workouts ADD COLUMN ai_issues TEXT;",
+  "ALTER TABLE workouts ADD COLUMN ai_experience TEXT;",
+  "ALTER TABLE workouts ADD COLUMN ai_time_available INTEGER;",
+  "ALTER TABLE workouts ADD COLUMN ai_training_days INTEGER;",
+];
 
 export const CREATE_EXERCISES_TABLE = `
   CREATE TABLE IF NOT EXISTS exercises (

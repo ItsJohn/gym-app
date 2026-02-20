@@ -110,6 +110,10 @@ export class GeminiService {
       ? `\nWORKOUT FOCUS: ${goals.workoutType} (create a workout specifically focused on this area)`
       : "";
 
+    const previousProgramSection = goals.previousProgram?.length
+      ? `\nPREVIOUS PROGRAM (vary and progress from this — do not repeat the same exercises):\n${goals.previousProgram.map((w) => `- "${w.title}": ${w.exercises.map((e) => `${e.name} (${e.muscle_group})`).join(", ")}`).join("\n")}\n`
+      : "";
+
     return `You are a professional fitness trainer and exercise physiologist. Create a personalized ${trainingDays} day workout program based on the following information:
 
 GOALS: ${goals.goals}
@@ -117,7 +121,7 @@ ${goals.issues ? `PHYSICAL ISSUES/LIMITATIONS: ${goals.issues}` : ""}
 EXPERIENCE LEVEL: ${goals.experience ?? "intermediate"}
 TIME AVAILABLE: ${goals.timeAvailable ?? 60} minutes per workout
 TRAINING FREQUENCY: ${trainingDays} days per week
-${goals.equipment ? `AVAILABLE EQUIPMENT: ${goals.equipment.join(", ")}` : "EQUIPMENT: Standard gym equipment available"}${workoutTypeGuidance}
+${goals.equipment ? `AVAILABLE EQUIPMENT: ${goals.equipment.join(", ")}` : "EQUIPMENT: Standard gym equipment available"}${workoutTypeGuidance}${previousProgramSection}
 
 IMPORTANT INSTRUCTIONS:
 1. Create EXACTLY ${trainingDays} workout(s) for this program

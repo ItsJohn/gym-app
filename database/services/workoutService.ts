@@ -11,8 +11,8 @@ const convertWorkoutToBoolean = (workout: any): Workout => ({
 export class WorkoutService {
   static async createWorkout(workout: Workout): Promise<number> {
     const result = await executeQuery(
-      `INSERT INTO workouts (title, description, end_date, day_of_week, expected_duration, suggested_playlist, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO workouts (title, description, end_date, day_of_week, expected_duration, suggested_playlist, is_active, ai_goals, ai_issues, ai_experience, ai_time_available, ai_training_days)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         workout.title,
         workout.description,
@@ -21,6 +21,11 @@ export class WorkoutService {
         workout.expected_duration,
         workout.suggested_playlist,
         true,
+        workout.ai_goals ?? null,
+        workout.ai_issues ?? null,
+        workout.ai_experience ?? null,
+        workout.ai_time_available ?? null,
+        workout.ai_training_days ?? null,
       ],
     );
     return result.lastInsertRowId;

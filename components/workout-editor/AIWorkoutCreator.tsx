@@ -16,16 +16,31 @@ import {
   Workout,
   WorkoutGoals,
 } from "@/validation/schemas";
+
+export interface AIWorkoutResult {
+  workouts: Workout[];
+  goals: WorkoutGoals;
+}
 import { ExperienceButton } from "./ExperienceButton";
 
 interface AIWorkoutCreatorProps {
-  onWorkoutProgramGenerated: (workouts: Workout[]) => void;
+  onWorkoutProgramGenerated: (result: AIWorkoutResult) => void;
   onCancel: () => void;
+  initialValues?: {
+    goals: string;
+    issues: string;
+    experience: "beginner" | "intermediate" | "advanced";
+    timeAvailable: string;
+    trainingDaysPerWeek: string;
+  };
+  previousProgram?: WorkoutGoals["previousProgram"];
 }
 
 export default function AIWorkoutCreator({
   onWorkoutProgramGenerated,
   onCancel,
+  initialValues,
+  previousProgram,
 }: Readonly<AIWorkoutCreatorProps>) {
   const placeholderTextColor = useThemeColor({}, "tabIconDefault");
   const textInputBackgroundColor = useThemeColor(
@@ -38,13 +53,19 @@ export default function AIWorkoutCreator({
   );
   const textInputTextColor = useThemeColor({}, "text");
 
-  const [goals, setGoals] = useState("Build muscle and strength");
-  const [issues, setIssues] = useState("");
+  const [goals, setGoals] = useState(
+    initialValues?.goals ?? "Build muscle and strength",
+  );
+  const [issues, setIssues] = useState(initialValues?.issues ?? "");
   const [experience, setExperience] = useState<
     "beginner" | "intermediate" | "advanced"
-  >("intermediate");
-  const [timeAvailable, setTimeAvailable] = useState("60");
-  const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState("3");
+  >(initialValues?.experience ?? "intermediate");
+  const [timeAvailable, setTimeAvailable] = useState(
+    initialValues?.timeAvailable ?? "60",
+  );
+  const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState(
+    initialValues?.trainingDaysPerWeek ?? "3",
+  );
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = useCallback(async () => {
@@ -73,6 +94,7 @@ export default function AIWorkoutCreator({
         timeAvailable: parseInt(timeAvailable) || 60,
         equipment: ["dumbbells", "barbells", "machines", "cables"], // Default gym equipment
         trainingDaysPerWeek: trainingDays,
+        previousProgram: previousProgram ?? undefined,
       };
 
       const validationResult = validateWorkoutGoals(workoutGoalsData);
@@ -115,7 +137,11 @@ export default function AIWorkoutCreator({
           { text: "Cancel", style: "cancel" },
           {
             text: "Use This Program",
-            onPress: () => onWorkoutProgramGenerated(generatedWorkouts),
+            onPress: () =>
+              onWorkoutProgramGenerated({
+                workouts: generatedWorkouts,
+                goals: validatedGoals,
+              }),
           },
         ],
       );
