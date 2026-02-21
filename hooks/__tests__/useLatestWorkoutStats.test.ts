@@ -21,8 +21,8 @@ const createWrapper = () => {
 describe("useLatestWorkoutStats", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("should aggregate stats across active workouts", async () => {
-    (WorkoutService.getActiveWorkouts as jest.Mock).mockResolvedValue([
+  it("should aggregate stats across all workouts", async () => {
+    (WorkoutService.getAllWorkouts as jest.Mock).mockResolvedValue([
       { id: 1, title: "Push Day" },
     ]);
     (SessionService.getSessionsByWorkoutId as jest.Mock).mockResolvedValue([
@@ -54,8 +54,8 @@ describe("useLatestWorkoutStats", () => {
     expect(result.current.data?.total_weight).toBe(80);
   });
 
-  it("should return zeros when no active workouts exist", async () => {
-    (WorkoutService.getActiveWorkouts as jest.Mock).mockResolvedValue([]);
+  it("should return zeros when no workouts exist", async () => {
+    (WorkoutService.getAllWorkouts as jest.Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() => useLatestWorkoutStats(), {
       wrapper: createWrapper(),

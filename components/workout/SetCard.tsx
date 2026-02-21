@@ -45,11 +45,13 @@ const getReps = (
   if (exercise.type === "distance") {
     return parseInt(sessionSet?.target.distance || "1000", 10);
   }
-  if (
-    exercise.type === "reps-sets" ||
-    exercise.type === "reps-per-side" ||
-    exercise.type === "reps"
-  ) {
+  if (exercise.type === "reps-per-side") {
+    return parseInt(
+      sessionSet?.target.per_side || sessionSet?.target.reps || "10",
+      10,
+    );
+  }
+  if (exercise.type === "reps-sets" || exercise.type === "reps") {
     return parseInt(sessionSet?.target.reps || "10", 10);
   }
 };
@@ -73,8 +75,7 @@ export default function SetCard({
     }
     const hasWeight =
       sessionSet?.target.weight !== undefined && sessionSet?.target.weight >= 0;
-    const hasReps =
-      sessionSet?.target.reps && getReps(exercise, sessionSet)! > 0;
+    const hasReps = (getReps(exercise, sessionSet) ?? 0) > 0;
     return !!(hasWeight && hasReps);
   }, [exercise, sessionSet]);
 
@@ -94,6 +95,11 @@ export default function SetCard({
         updateSessionSet({
           ...sessionSet,
           target: { ...sessionSet?.target, distance: reps.toString() },
+        });
+      } else if (exercise.type === "reps-per-side") {
+        updateSessionSet({
+          ...sessionSet,
+          target: { ...sessionSet?.target, per_side: reps.toString() },
         });
       } else {
         updateSessionSet({

@@ -34,6 +34,12 @@ export class SessionService {
     );
   }
 
+  static async getAllSessions(): Promise<Session[]> {
+    return await getAllRows<Session>(
+      "SELECT * FROM workout_sessions ORDER BY started_at DESC",
+    );
+  }
+
   static async completeSession(
     sessionId: string,
     notes?: string,
@@ -179,6 +185,48 @@ export class SessionService {
     return session;
   }
 
+  static async getLastSessionSetsForExercise(
+    workoutId: number,
+    exerciseId: string,
+  ): Promise<
+    Array<{
+      reps?: string;
+      per_side?: string;
+      distance?: string;
+      weight?: number;
+    }>
+  > {
+    const lastCompletedSession = await getFirstRow<Session>(
+      `SELECT * FROM workout_sessions
+       WHERE workout_id = ? AND is_completed = 1
+       ORDER BY completed_at DESC LIMIT 1`,
+      [workoutId],
+    );
+
+    if (!lastCompletedSession?.id) return [];
+
+    const exerciseSets = await getAllRows<{ target: string }>(
+      `SELECT target FROM session_set
+       WHERE session_id = ? AND exercise_id = ?
+       ORDER BY created_at ASC`,
+      [lastCompletedSession.id, exerciseId],
+    );
+
+    return exerciseSets.map((set) => {
+      try {
+        const target = JSON.parse(set.target);
+        return {
+          reps: target.reps ?? undefined,
+          per_side: target.per_side ?? undefined,
+          distance: target.distance ?? undefined,
+          weight: target.weight ?? undefined,
+        };
+      } catch {
+        return {};
+      }
+    });
+  }
+
   // Get the last completed session's data for a specific exercise
   static async getLastSessionDataForExercise(
     workoutId: number,
@@ -214,7 +262,8 @@ export class SessionService {
         const target = JSON.parse(set.target);
         return {
           weight: target.weight,
-          reps: target.reps,
+          // per_side takes precedence for reps-per-side exercises
+          reps: target.per_side ?? target.reps,
           distance: target.distance,
         };
       } catch {

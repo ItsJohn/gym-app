@@ -101,16 +101,21 @@ export default function SetInput({
 
   // Auto-initialize reps to target value for rep-based exercises when undefined
   useEffect(() => {
-    if (
-      (exercise.type === "reps" ||
-        exercise.type === "reps-sets" ||
-        exercise.type === "reps-per-side") &&
-      reps === undefined
-    ) {
+    if (reps !== undefined) return;
+    if (exercise.type === "reps-per-side") {
+      const targetPerSide = parseInt(exercise.target.per_side || "10", 10);
+      onRepsChange(targetPerSide);
+    } else if (exercise.type === "reps" || exercise.type === "reps-sets") {
       const targetReps = parseInt(exercise.target.reps || "10", 10);
       onRepsChange(targetReps);
     }
-  }, [exercise.type, exercise.target.reps, reps, onRepsChange]);
+  }, [
+    exercise.type,
+    exercise.target.reps,
+    exercise.target.per_side,
+    reps,
+    onRepsChange,
+  ]);
 
   // Generate weight options (5-500 in increments of 2.5 for kg, 5-1000 in increments of 5 for lbs)
   const weightOptions = useMemo(() => {

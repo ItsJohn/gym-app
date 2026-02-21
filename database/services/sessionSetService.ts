@@ -1,6 +1,7 @@
 import { SessionSet as SessionSetType } from "@/validation/sessionSets";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
 import { ExerciseService } from "./exerciseService";
+import { SessionService } from "./sessionService";
 
 export class SessionSetService {
   static async initializeSessionSets(
@@ -12,15 +13,27 @@ export class SessionSetService {
     return Promise.all(
       exercises.map(async (exercise) => {
         const sets = exercise.target?.sets ? parseInt(exercise.target.sets) : 1;
+        const lastSets = await SessionService.getLastSessionSetsForExercise(
+          workoutId,
+          exercise.id ?? "",
+        );
 
-        const setPromises = Array.from({ length: sets }, () =>
-          this.createExerciseSet({
+        const setPromises = Array.from({ length: sets }, (_, index) => {
+          const last = lastSets[index];
+          const target = {
+            ...exercise.target,
+            ...(last?.reps !== undefined && { reps: last.reps }),
+            ...(last?.per_side !== undefined && { per_side: last.per_side }),
+            ...(last?.distance !== undefined && { distance: last.distance }),
+            ...(last?.weight !== undefined && { weight: last.weight }),
+          };
+          return this.createExerciseSet({
             session_id: sessionId,
             exercise_id: exercise.id ?? "",
-            target: exercise.target,
+            target,
             is_completed: false,
-          }),
-        );
+          });
+        });
         return Promise.all(setPromises);
       }),
     ).then((setArrays) => setArrays.flat());

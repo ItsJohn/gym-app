@@ -42,3 +42,7 @@ app-example
 coverage/
 .jest/
 *.lcov
+
+# Store credentials (never commit these)
+google-service-account.json
+*.p8

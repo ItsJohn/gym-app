@@ -30,7 +30,7 @@ export default function ExerciseListItem({
       return `${exercise.target.sets} sets × ${exercise.target.reps} reps`;
     }
     if (exercise.type === "reps-per-side") {
-      return `${exercise.target.sets} sets × ${exercise.target.reps} reps per side`;
+      return `${exercise.target.sets} sets × ${exercise.target.per_side} reps per side`;
     }
     if (exercise.type === "duration") {
       return `${exercise.target.duration} seconds`;

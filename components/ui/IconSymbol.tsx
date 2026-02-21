@@ -25,6 +25,7 @@ const MAPPING = {
   gear: "settings",
   "dumbbell.fill": "fitness-center",
   "chart.bar.fill": "bar-chart",
+  "clock.fill": "history",
 } as IconMapping;
 
 /**

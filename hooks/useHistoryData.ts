@@ -3,49 +3,18 @@ import { router } from "expo-router";
 import { useCallback } from "react";
 
 import { SessionService } from "@/database/services/sessionService";
-import { useActiveWorkouts, useLatestWorkoutStats } from "@/hooks";
+import { useLatestWorkoutStats } from "@/hooks";
 import { sessionKeys } from "@/hooks/service/session";
 import { Session } from "@/validation/session";
 
 export function useHistoryData() {
   const { data: workoutStats, isLoading: isStatsLoading } =
     useLatestWorkoutStats();
-  const { data: activeWorkouts, isLoading: isWorkoutsLoading } =
-    useActiveWorkouts();
 
   const { data: allActiveWorkoutSessions, isLoading: isSessionsLoading } =
     useQuery({
       queryKey: sessionKeys.allActiveWorkoutSessions(),
-      queryFn: async () => {
-        if (!activeWorkouts || activeWorkouts.length === 0) {
-          return [];
-        }
-
-        const allSessions: Session[] = [];
-
-        for (const workout of activeWorkouts) {
-          if (!workout.id) continue;
-
-          try {
-            const workoutSessions = await SessionService.getSessionsByWorkoutId(
-              workout.id,
-            );
-            allSessions.push(...workoutSessions);
-          } catch (error) {
-            console.error(
-              `Error fetching sessions for workout ${workout.id}:`,
-              error,
-            );
-          }
-        }
-
-        return allSessions.sort((a, b) => {
-          const dateA = a.started_at ? new Date(a.started_at).getTime() : 0;
-          const dateB = b.started_at ? new Date(b.started_at).getTime() : 0;
-          return dateB - dateA;
-        });
-      },
-      enabled: !isWorkoutsLoading && !!activeWorkouts,
+      queryFn: () => SessionService.getAllSessions(),
       staleTime: 2 * 60 * 1000,
     });
 
@@ -75,7 +44,7 @@ export function useHistoryData() {
     });
   }, []);
 
-  const isLoading = isWorkoutsLoading || isStatsLoading || isSessionsLoading;
+  const isLoading = isStatsLoading || isSessionsLoading;
 
   return {
     stats,

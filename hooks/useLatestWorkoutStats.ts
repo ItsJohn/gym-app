@@ -1,7 +1,7 @@
 import { SessionService } from "@/database/services/sessionService";
 import { SessionSetService } from "@/database/services/sessionSetService";
 import { useQuery } from "@tanstack/react-query";
-import { useActiveWorkouts } from "./service/workouts";
+import { useWorkouts } from "./service/workouts";
 
 interface WorkoutStats {
   total_sessions: number;
@@ -20,7 +20,7 @@ interface WorkoutStats {
 }
 
 export const useLatestWorkoutStats = () => {
-  const { data: activeWorkouts, isLoading } = useActiveWorkouts();
+  const { data: activeWorkouts, isLoading } = useWorkouts();
 
   return useQuery({
     queryKey: ["activeWorkoutsStats"],
@@ -56,7 +56,6 @@ export const useLatestWorkoutStats = () => {
         { total: number; completed: number }
       >();
 
-      // Process each active workout
       for (const workout of activeWorkouts) {
         if (!workout.id) continue;
 
