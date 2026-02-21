@@ -114,91 +114,120 @@ export class GeminiService {
       ? `\nPREVIOUS PROGRAM (vary and progress from this — do not repeat the same exercises):\n${goals.previousProgram.map((w) => `- "${w.title}": ${w.exercises.map((e) => `${e.name} (${e.muscle_group})`).join(", ")}`).join("\n")}\n`
       : "";
 
-    return `You are a professional fitness trainer and exercise physiologist. Create a personalized ${trainingDays} day workout program based on the following information:
+    return `You are a professional fitness trainer and exercise physiologist with deep knowledge of safe, evidence-based programming. Create a personalized ${trainingDays}-day workout program based on the following user profile:
 
+USER PROFILE
 GOALS: ${goals.goals}
-${goals.issues ? `PHYSICAL ISSUES/LIMITATIONS: ${goals.issues}` : ""}
+${goals.issues ? `PHYSICAL ISSUES / LIMITATIONS: ${goals.issues}` : ""}
 EXPERIENCE LEVEL: ${goals.experience ?? "intermediate"}
 TIME AVAILABLE: ${goals.timeAvailable ?? 60} minutes per workout
 TRAINING FREQUENCY: ${trainingDays} days per week
-${goals.equipment ? `AVAILABLE EQUIPMENT: ${goals.equipment.join(", ")}` : "EQUIPMENT: Standard gym equipment available"}${workoutTypeGuidance}${previousProgramSection}
+${goals.equipment ? `AVAILABLE EQUIPMENT: ${goals.equipment.join(", ")}` : "EQUIPMENT: Standard gym equipment available"}
+${workoutTypeGuidance ?? ""}
+${previousProgramSection ?? ""}
 
-IMPORTANT INSTRUCTIONS:
-1. Create EXACTLY ${trainingDays} workout(s) for this program
-2. If there are physical issues mentioned (like lower back pain, knee problems, etc.), prioritize safety and suggest modifications or alternative exercises
-3. Create balanced workouts that address the stated goals
-4. Consider the experience level when setting sets, reps, and exercise difficulty
-5. Include proper rest periods between exercises (30-600 seconds)
-6. Provide warnings for any exercises that might aggravate mentioned issues
-7. Give recommendations for progression or modifications
-8. If specific exercises are mentioned in the goals, prioritize including them in the workouts
-9. Adjust the number of exercises and rest periods to fit within the specified time constraints
+CORE REQUIREMENTS
+1. Create EXACTLY ${trainingDays} workout objects — no more, no less.
+2. Prioritize safety above all.
+3. Scale sets, reps, rest, and exercise complexity to the experience level.
+4. Respect time availability by limiting total exercises and volume.
+5. Use only widely recognized, standard exercise names.
+6. Do NOT invent exercise variations or novel naming.
+7. Do NOT include advanced intensity techniques unless experience level is "advanced".
+8. If user specified exercises in goals, include them prominently.
 
-RESPONSE FORMAT - Return ONLY valid JSON in this exact structure (MUST be an array of ${trainingDays} workout objects):
+SAFETY RULES (MANDATORY)
+If physical limitations are provided:
+* Avoid known contraindicated movements.
+* Avoid heavy spinal loading if back pain is mentioned.
+* Avoid deep knee flexion if knee pain is mentioned unless stated tolerable.
+* Avoid overhead pressing if shoulder impingement is mentioned.
+* Provide safer alternatives or modification notes when relevant.
+* Include at least one stability, mobility, or corrective element if limitations exist.
+If no limitations are provided, still program conservatively and safely.
+
+PROGRAM STRUCTURE RULES
+Choose an appropriate split based on frequency:
+* 2 days → Full Body or Upper/Lower
+* 3 days → Full Body or Push/Pull/Legs
+* 4 days → Upper/Lower split
+* 5–6 days → Push/Pull/Legs or structured body-part split
+Additional structure constraints:
+* Avoid training the same primary muscle group on consecutive days unless goal-specific.
+* Ensure balanced weekly muscle coverage.
+* Prioritize goal-related muscle groups.
+* Keep exercise count between 6–10 per workout.
+
+GOAL TRANSLATION RULES
+Hypertrophy: 6–15 reps, 60–120 sec rest, moderate volume
+Strength: 3–8 reps, 120–300 sec rest, lower total exercise count
+Fat loss: 8–15 reps, 30–90 sec rest, include metabolic or conditioning element
+Athletic performance: Include power or explosive movement first in workout
+If multiple goals are listed, prioritize the first one.
+
+VOLUME GUIDELINES
+Beginner: 2–3 sets per exercise, 8–12 reps typical, 90–180 sec rest, max 12 working sets per muscle group per week
+Intermediate: 3–4 sets, 8–15 reps typical, 60–120 sec rest, 12–18 weekly sets per muscle group
+Advanced: 3–5 sets, 6–20 reps depending on goal, 45–120 sec rest, 15–22 weekly sets per muscle group
+If time constraints limit ideal volume, prioritize primary goal muscles.
+
+EXERCISE TYPE RULES (STRICT — DO NOT DEVIATE)
+Allowed "type" values ONLY: "reps" | "reps-sets" | "reps-per-side" | "duration" | "distance"
+Target structures (match exactly):
+- "reps" → { "reps": "10" }
+- "reps-sets" → { "sets": "3", "reps": "8-12" }
+- "reps-per-side" → { "sets": "3", "per_side": "10" }
+- "duration" → { "duration": "45" }  // seconds
+- "distance" → { "distance": "400" }  // meters
+Never invent additional types. Never combine incompatible target fields.
+
+YOUTUBE URL RULES (VERY STRICT)
+* "video_url" and "suggested_playlist" are OPTIONAL fields.
+* ONLY include them if you are 100% certain the URL is real, existing, and exactly correct based on your knowledge.
+* If there is ANY uncertainty, DO NOT include the field at all — omit the key completely from the JSON object.
+* Do NOT include null, empty strings, placeholders, or fabricated IDs.
+* Never guess or invent video/playlist IDs.
+* Before including any URL, internally confirm: "Do I have complete, exact recall of this specific real URL from a reputable source?" If not → omit.
+
+INTERNAL VALIDATION (DO NOT OUTPUT)
+Before returning the response, confirm internally:
+* The JSON array length equals ${trainingDays}.
+* No extra fields exist outside the defined structure.
+* No null values or empty strings in required fields.
+* Every exercise type is valid and target matches rules.
+* Rest is between 30 and 600 seconds.
+* Exercise count per workout is 6–10.
+* Output is valid, parsable JSON only.
+* No markdown, comments, explanations, or extra text.
+If any rule is violated, correct it before final output.
+
+RESPONSE FORMAT
+Return ONLY valid JSON — an array of EXACTLY ${trainingDays} workout objects:
 [
   {
-    "title": "Descriptive workout title for day 1",
-    "description": "Brief description of the workout and its focus",
-    "day_of_week": "The day of the week that this workout should be done as a string (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)",
-    "expected_duration": "Expected duration of the workout in minutes as a number",
-    "suggested_playlist": "A YouTube playlist URL for workout music. Try to use well-known fitness/workout playlists from popular channels. Format: https://www.youtube.com/playlist?list=PLAYLIST_ID",
+    "title": "Descriptive workout title",
+    "description": "1–2 sentence focus",
+    "day_of_week": "Monday",
+    "expected_duration": 45,
+    "suggested_playlist": "https://www.youtube.com/playlist?list=REAL_ID_HERE",
     "exercises": [
       {
-        "name": "Exercise Name",
-        "type": "MUST be one of: reps|reps-sets|reps-per-side|duration|distance (NO OTHER VALUES ALLOWED)",
+        "name": "Barbell Back Squat",
+        "type": "reps-sets",
         "target": {
-          "reps": "If type is 'reps', the number of reps to do as a string",
-          "sets": "If type is 'reps-sets' or 'reps-per-side', the number of sets to do as a string",
-          "per_side": "If type is 'reps-per-side', the number of reps to do per side as a string (for unilateral exercises like lunges, single-arm rows, etc.)",
-          "duration": "If type is 'duration', the duration of the exercise in seconds as a string",
-          "distance": "If type is 'distance', the distance of the exercise in meters as a string"
+          "sets": "4",
+          "reps": "8-12"
         },
-        "muscle_group": "What is the primary muscle group that this exercise targets? (Chest, Back, Legs, Shoulders, Arms, Core, Full Body)",
-        "difficulty": "beginner|intermediate|advanced",
-        "rest_seconds": "How long should the rest be between this exercise and the next one in seconds as a number? (60 seconds is a good default)",
-        "notes": "Optional safety notes, modifications or tips for this exercise",
-        "video_url": "A YouTube video URL demonstrating proper form for this exercise. Use well-known fitness channels like Athlean-X, Jeff Nippard, FitnessBlender, etc. Format: https://www.youtube.com/watch?v=VIDEO_ID"
+        "muscle_group": "Legs",
+        "difficulty": "intermediate",
+        "rest_seconds": 120,
+        "notes": "Maintain neutral spine.",
+        "video_url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID_HERE"
       }
     ]
-  }${trainingDays > 1 ? ",\n  // ... repeat for each additional day up to day " + trainingDays : ""}
+  }
 ]
-
-EXERCISE TYPE RULES - CRITICAL:
-- Use "reps" for simple rep-based exercises (e.g., push-ups: 10 reps)
-- Use "reps-sets" for exercises with multiple sets (e.g., bench press: 3 sets of 8 reps)
-- Use "reps-per-side" for unilateral exercises (e.g., lunges: 12 per side, single-arm rows: 10 per side)
-- Use "duration" for time-based exercises (e.g., plank: 30 seconds, wall sit: 45 seconds)
-- Use "distance" for distance-based exercises (e.g., running: 1000 meters)
-- NEVER use "reps-per-side-sets" or any other combination - it's invalid!
-- For unilateral exercises with multiple sets, use "reps-per-side" and set the number of sets in the "sets" field
-
-EXERCISE GUIDELINES:
-- Include 6-10 exercises for a complete workout depending on the expected duration
-- Vary muscle groups for balance unless a specific workout focus is requested
-- Set appropriate rest periods (60-120 seconds typically)
-- Use standard exercise names that are widely recognized
-- For beginners: 2-3 sets, 8-12 reps, longer rest
-- For intermediate: 3-4 sets, 8-15 reps, moderate rest
-- For advanced: 3-5 sets, 6-20 reps depending on goals, shorter rest
-- If specific exercises are mentioned in the goals, make sure to include them in appropriate workouts
-- Adjust exercise volume and rest periods to fit within the specified time constraints
-
-TIME MANAGEMENT GUIDELINES:
-- Calculate total workout time: (exercise time + rest time) × number of exercises
-- For ${goals.timeAvailable} minute workouts, plan accordingly:
-  - 30-45 min: 4-6 exercises with shorter rest periods
-  - 45-60 min: 6-8 exercises with moderate rest periods
-  - 60-90 min: 8-10 exercises with standard rest periods
-  - 90+ min: 10+ exercises with longer rest periods
-
-YOUTUBE URL GUIDELINES:
-- For exercise videos: Search for "[Exercise Name] proper form" or "[Exercise Name] technique"
-- Prefer videos from established fitness channels with good production quality
-- For playlists: Look for "workout music", "gym music", or "fitness motivation" playlists
-- Use complete, properly formatted YouTube URLs
-- If unsure about a URL, it's better to use a generic fitness-related URL than a fake one
-
-Remember: Safety first, especially with mentioned physical limitations. Use clear, standard exercise names. All URLs will be verified, so try to use real YouTube content. Respond with ONLY the JSON array of ${trainingDays} workout objects, no additional text.`;
+Return nothing except the JSON array.`;
   }
 
   private static removeAIResponseFormatting(text: string): string {
