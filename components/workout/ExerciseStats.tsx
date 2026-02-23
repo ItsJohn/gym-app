@@ -18,9 +18,9 @@ export default function ExerciseStats({
   weightUnit = "kg",
 }: ExerciseStatsProps) {
   const { data: stats, isLoading: isStatsLoading } =
-    useExerciseStats(exerciseId);
+    useExerciseStats(exerciseName);
   const { data: weightData, isLoading: isChartLoading } =
-    useWeightProgression(exerciseId);
+    useWeightProgression(exerciseName);
 
   if (isStatsLoading || isChartLoading) {
     return (
@@ -70,6 +70,8 @@ export default function ExerciseStats({
           data={weightData}
           isLoading={false}
           exerciseName={exerciseName}
+          variant="onBlue"
+          weightUnit={weightUnit}
         />
       )}
     </View>
