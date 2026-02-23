@@ -80,11 +80,7 @@ export function useWorkoutSession() {
       );
     } catch (err) {
       console.error("Error finishing workout:", err);
-      Alert.alert(
-        "Workout Complete!",
-        "Congratulations on completing your workout!",
-        [{ text: "OK", onPress: () => router.back() }],
-      );
+      Alert.alert("Error", "Failed to save your workout. Please try again.");
     }
   }, [sessionId, settings.weightUnit]);
 

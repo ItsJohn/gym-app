@@ -124,5 +124,6 @@ export type DayOfWeekShort = (typeof DAYS_OF_WEEK_SHORT)[number];
 // Workout with assigned day information
 export interface WorkoutWithDay extends Workout {
   dayName?: string;
+  dayOfWeek?: DayOfWeek;
   isScheduled?: boolean;
 }

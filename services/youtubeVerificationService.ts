@@ -16,8 +16,14 @@ export class YouTubeVerificationService {
       // Use YouTube oEmbed API to verify video exists (no API key required)
       const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
 
-      const response = await fetch(oembedUrl);
-      return response.ok;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(oembedUrl, { signal: controller.signal });
+        return response.ok;
+      } finally {
+        clearTimeout(timeout);
+      }
     } catch (error) {
       console.error("Error verifying YouTube URL:", url, error);
       return false;
@@ -36,8 +42,14 @@ export class YouTubeVerificationService {
       // Use YouTube oEmbed API to verify playlist exists (no API key required)
       const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=${playlistId}&format=json`;
 
-      const response = await fetch(oembedUrl);
-      return response.ok;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(oembedUrl, { signal: controller.signal });
+        return response.ok;
+      } finally {
+        clearTimeout(timeout);
+      }
     } catch (error) {
       console.error("Error verifying YouTube playlist URL:", url, error);
       return false;

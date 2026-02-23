@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, memo, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -56,7 +56,7 @@ const getReps = (
   }
 };
 
-export default function SetCard({
+function SetCard({
   setNumber,
   exercise,
   sessionSetId,
@@ -74,7 +74,7 @@ export default function SetCard({
       return true;
     }
     const hasWeight =
-      sessionSet?.target.weight !== undefined && sessionSet?.target.weight >= 0;
+      sessionSet?.target.weight != null && sessionSet.target.weight >= 0;
     const hasReps = (getReps(exercise, sessionSet) ?? 0) > 0;
     return !!(hasWeight && hasReps);
   }, [exercise, sessionSet]);
@@ -179,6 +179,8 @@ export default function SetCard({
     </ThemedView>
   );
 }
+
+export default memo(SetCard);
 
 const styles = StyleSheet.create({
   setContainer: {

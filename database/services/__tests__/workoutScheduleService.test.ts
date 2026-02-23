@@ -217,10 +217,10 @@ describe("WorkoutScheduleService", () => {
 
       await WorkoutScheduleService.initializeDefault3DaySchedule();
 
-      // Only 1 workout should be scheduled
+      // Only 1 workout should be scheduled (Monday = day index 1)
       expect(mockExecuteQuery).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE workout_schedules"),
-        ["Monday"],
+        [1],
       );
     });
   });

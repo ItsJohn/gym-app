@@ -9,8 +9,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { useHistoryData } from "@/hooks/useHistoryData";
 
 export default function HistoryScreen() {
-  const { stats, allActiveWorkoutSessions, isLoading, handleSessionPress } =
-    useHistoryData();
+  const {
+    stats,
+    allActiveWorkoutSessions,
+    isLoading,
+    error,
+    handleSessionPress,
+  } = useHistoryData();
 
   if (isLoading) {
     return (
@@ -20,6 +25,22 @@ export default function HistoryScreen() {
       >
         <ThemedView style={styles.container}>
           <ThemedText type="title">Loading...</ThemedText>
+        </ThemedView>
+      </ParallaxScrollView>
+    );
+  }
+
+  if (error) {
+    return (
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+        headerImage={<GymLogo />}
+      >
+        <ThemedView style={styles.container}>
+          <ThemedText type="title">Failed to load history</ThemedText>
+          <ThemedText style={{ opacity: 0.7, marginTop: 8 }}>
+            Please restart the app and try again.
+          </ThemedText>
         </ThemedView>
       </ParallaxScrollView>
     );

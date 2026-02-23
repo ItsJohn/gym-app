@@ -163,3 +163,80 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Ready to start your fitness journey?** 🏋️‍♂️ Get started with Gym Sweat & Tears today!
+
+
+
+Step-by-Step Publishing Guide
+
+  Prerequisites
+
+  npm install -g eas-cli
+  eas login
+
+  ---
+  iOS — Apple App Store
+
+  1. Apple Developer Program
+  - Enroll at developer.apple.com ($99/year)
+  - Note your Team ID from Membership page
+
+  2. App Store Connect
+  - Go to appstoreconnect.apple.com → My Apps → +
+  - Fill in: name, primary language, bundle ID (com.its-john.gymsweattears), SKU (anything unique, e.g. gymsweattears-001)
+  - Note the App ID (numeric) from the app's page URL
+
+  3. Update eas.json — fill in your real values:
+  "appleId": "you@email.com",
+  "ascAppId": "1234567890",   ← the numeric App Store Connect App ID
+  "appleTeamId": "XXXXXXXXXX" ← from Apple Developer Membership
+
+  4. Build & submit:
+  eas build --platform ios --profile production
+  eas submit --platform ios --profile production
+
+  5. In App Store Connect — complete the listing:
+  - Screenshots (required: 6.7" iPhone + 12.9" iPad if tablet is enabled)
+  - Description, keywords, category (Health & Fitness)
+  - Privacy policy URL (required — must host one publicly)
+  - Age rating questionnaire
+  - Submit for review (~1-3 days)
+
+  ---
+  Android — Google Play Store
+
+  1. Google Play Console
+  - Register at play.google.com/console ($25 one-time)
+  - Create app → name, default language, app/game, free/paid
+
+  2. Service Account for automated submission
+  - In Play Console → Setup → API access → link to a Google Cloud project
+  - Create a service account with Release Manager role
+  - Download the JSON key → save as google-service-account.json in project root (already gitignored)
+
+  3. Build & submit:
+  eas build --platform android --profile production
+  eas submit --platform android --profile production
+  This submits to the internal test track first (safe — not public). You can promote to production from the Play Console.
+
+  4. Complete the Play Console listing:
+  - Store listing: description, screenshots, feature graphic (1024×500px)
+  - Privacy policy URL (same one as iOS is fine)
+  - Content rating questionnaire
+  - Target audience
+  - Promote from Internal → Production when ready
+
+  ---
+  Privacy Policy (Required by Both Stores)
+
+  Since the app uses an AI API (Gemini), you must have a privacy policy. The easiest free options:
+  - Host a page on GitHub Pages or Notion (make it public)
+  - Use a generator like privacypolicygenerator.info
+
+  The policy needs to mention: data you collect, third-party APIs used (Google Gemini), and that no personal health data is sold.
+
+  ---
+  Build Both Platforms at Once
+
+  eas build --platform all --profile production
+
+  Then submit each separately once builds complete.

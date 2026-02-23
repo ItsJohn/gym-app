@@ -1,7 +1,6 @@
 import { SessionSet as SessionSetType } from "@/validation/sessionSets";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
 import { ExerciseService } from "./exerciseService";
-import { SessionService } from "./sessionService";
 
 export class SessionSetService {
   static async initializeSessionSets(
@@ -10,13 +9,56 @@ export class SessionSetService {
   ): Promise<number[]> {
     const exercises = await ExerciseService.getExercisesByWorkoutId(workoutId);
 
+    // Fetch last completed session once instead of once per exercise
+    const lastSession = await getFirstRow<{ id: number }>(
+      `SELECT id FROM workout_sessions WHERE workout_id = ? AND is_completed = 1 ORDER BY completed_at DESC LIMIT 1`,
+      [workoutId],
+    );
+
+    // Batch-fetch all sets from last session in a single query
+    const lastSetsByExercise = new Map<
+      string,
+      Array<{
+        reps?: string;
+        per_side?: string;
+        distance?: string;
+        weight?: number;
+      }>
+    >();
+
+    if (lastSession?.id) {
+      const exerciseIds = exercises.map((e) => e.id ?? "").filter(Boolean);
+      if (exerciseIds.length > 0) {
+        const placeholders = exerciseIds.map(() => "?").join(", ");
+        const allSets = await getAllRows<{
+          exercise_id: string;
+          target: string;
+        }>(
+          `SELECT exercise_id, target FROM session_set WHERE session_id = ? AND exercise_id IN (${placeholders}) ORDER BY created_at ASC`,
+          [lastSession.id, ...exerciseIds],
+        );
+        for (const set of allSets) {
+          try {
+            const target = JSON.parse(set.target);
+            const arr = lastSetsByExercise.get(set.exercise_id) ?? [];
+            arr.push({
+              reps: target.reps ?? undefined,
+              per_side: target.per_side ?? undefined,
+              distance: target.distance ?? undefined,
+              weight: target.weight ?? undefined,
+            });
+            lastSetsByExercise.set(set.exercise_id, arr);
+          } catch {
+            // skip sets with invalid target JSON
+          }
+        }
+      }
+    }
+
     return Promise.all(
       exercises.map(async (exercise) => {
         const sets = exercise.target?.sets ? parseInt(exercise.target.sets) : 1;
-        const lastSets = await SessionService.getLastSessionSetsForExercise(
-          workoutId,
-          exercise.id ?? "",
-        );
+        const lastSets = lastSetsByExercise.get(exercise.id ?? "") ?? [];
 
         const setPromises = Array.from({ length: sets }, (_, index) => {
           const last = lastSets[index];

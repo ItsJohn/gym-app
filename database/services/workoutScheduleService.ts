@@ -133,7 +133,7 @@ export class WorkoutScheduleService {
   static async initializeDefault3DaySchedule(): Promise<void> {
     const workouts = await WorkoutService.getAllWorkouts();
 
-    const defaultDays: DayOfWeek[] = ["Monday", "Wednesday", "Friday"];
+    const defaultDays = [1, 3, 5] as unknown as DayOfWeek[];
 
     for (let i = 0; i < Math.min(3, workouts.length); i++) {
       const workoutId = workouts[i]?.id;
@@ -145,8 +145,8 @@ export class WorkoutScheduleService {
 
   // Get today's workout
   static async getTodaysWorkout(): Promise<WorkoutWithExercises | null> {
-    const today = DAYS_OF_WEEK[new Date().getDay()];
-    return await this.getWorkoutForDayOfWeek(today);
+    const todayIndex = new Date().getDay() as unknown as DayOfWeek;
+    return await this.getWorkoutForDayOfWeek(todayIndex);
   }
 
   // Get next scheduled workout
@@ -160,13 +160,13 @@ export class WorkoutScheduleService {
 
     // Look for the next scheduled day starting from tomorrow
     for (let i = 1; i <= 7; i++) {
-      const checkDay = DAYS_OF_WEEK[(todayIndex + i) % 7];
-      const workout = weeklySchedule[checkDay];
+      const checkDayIndex = ((todayIndex + i) % 7) as unknown as DayOfWeek;
+      const workout = weeklySchedule[checkDayIndex];
 
       if (workout) {
         return {
           workout,
-          dayName: checkDay,
+          dayName: DAYS_OF_WEEK[checkDayIndex as unknown as number],
           daysUntil: i,
         };
       }

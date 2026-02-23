@@ -68,38 +68,6 @@ export function ProgramEditor({
     [],
   );
 
-  const handleSaveProgram = useCallback(async () => {
-    // Validate all workouts first
-    for (const workout of workouts) {
-      const validationError = validateWorkoutInput(workout);
-      if (validationError) {
-        Alert.alert("Validation Error", validationError);
-        return;
-      }
-    }
-
-    // Check if there are existing active workouts that will be deprecated
-    const existingActiveWorkouts = await WorkoutService.getActiveWorkouts();
-    const hasExistingWorkouts = existingActiveWorkouts.length > 0;
-
-    if (hasExistingWorkouts) {
-      Alert.alert(
-        "Replace Existing Workouts",
-        `You have ${existingActiveWorkouts.length} active workout${existingActiveWorkouts.length > 1 ? "s" : ""} that will be marked as inactive when you save this new program. This action cannot be undone. Continue?`,
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Replace",
-            style: "destructive",
-            onPress: () => saveProgramWithDeprecation(),
-          },
-        ],
-      );
-    } else {
-      await saveProgramWithDeprecation();
-    }
-  }, [validateWorkoutInput, workouts, saveProgramWithDeprecation]);
-
   const saveProgramWithDeprecation = useCallback(async () => {
     try {
       setIsSaving(true);
@@ -136,6 +104,38 @@ export function ProgramEditor({
       setIsSaving(false);
     }
   }, [workouts]);
+
+  const handleSaveProgram = useCallback(async () => {
+    // Validate all workouts first
+    for (const workout of workouts) {
+      const validationError = validateWorkoutInput(workout);
+      if (validationError) {
+        Alert.alert("Validation Error", validationError);
+        return;
+      }
+    }
+
+    // Check if there are existing active workouts that will be deprecated
+    const existingActiveWorkouts = await WorkoutService.getActiveWorkouts();
+    const hasExistingWorkouts = existingActiveWorkouts.length > 0;
+
+    if (hasExistingWorkouts) {
+      Alert.alert(
+        "Replace Existing Workouts",
+        `You have ${existingActiveWorkouts.length} active workout${existingActiveWorkouts.length > 1 ? "s" : ""} that will be marked as inactive when you save this new program. This action cannot be undone. Continue?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Replace",
+            style: "destructive",
+            onPress: () => saveProgramWithDeprecation(),
+          },
+        ],
+      );
+    } else {
+      await saveProgramWithDeprecation();
+    }
+  }, [validateWorkoutInput, workouts, saveProgramWithDeprecation]);
 
   return (
     <ThemedView style={styles.container}>

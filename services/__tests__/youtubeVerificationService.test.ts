@@ -20,6 +20,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
 
@@ -64,6 +65,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
 
@@ -78,6 +80,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
 
@@ -92,6 +95,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
   });
@@ -108,6 +112,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=PLwHPDVxB8ZaK7B-JLyqVXM3kOZfCFCz-e&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
 
@@ -152,6 +157,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=PLwHPDVxB8ZaK7B-JLyqVXM3kOZfCFCz-e&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
 
@@ -166,6 +172,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=PLwHPDVxB8ZaK7B-JLyqVXM3kOZfCFCz-e&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
   });
@@ -446,6 +453,7 @@ describe("YouTubeVerificationService", () => {
       expect(result).toBe(true);
       expect(fetch).toHaveBeenCalledWith(
         "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ&format=json",
+        expect.objectContaining({ signal: expect.any(Object) }),
       );
     });
 

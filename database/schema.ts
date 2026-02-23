@@ -107,6 +107,8 @@ export const CREATE_INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_workout_schedules_day_of_week ON workout_schedules (day_of_week);",
   "CREATE INDEX IF NOT EXISTS idx_workout_schedules_workout_id ON workout_schedules (workout_id);",
   "CREATE INDEX IF NOT EXISTS idx_workout_schedules_active ON workout_schedules (is_active);",
+  "CREATE INDEX IF NOT EXISTS idx_workout_sessions_completed_at ON workout_sessions (completed_at);",
+  "CREATE INDEX IF NOT EXISTS idx_session_set_created_at ON session_set (created_at);",
 ];
 
 export const ALL_TABLES = [

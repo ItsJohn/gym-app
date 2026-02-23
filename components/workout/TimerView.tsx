@@ -26,12 +26,7 @@ export default function TimerView({
 
   return (
     <ThemedView style={styles.exerciseContainer}>
-      <ExerciseHeader
-        exerciseName={exerciseName}
-        muscleGroup={muscleGroup}
-        showDescription={false}
-        onToggleDescription={() => {}}
-      />
+      <ExerciseHeader exerciseName={exerciseName} muscleGroup={muscleGroup} />
 
       <ThemedView style={styles.timerViewContainer}>
         <ThemedText style={styles.timerTitle}>{exerciseName}</ThemedText>

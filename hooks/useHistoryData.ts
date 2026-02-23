@@ -11,12 +11,15 @@ export function useHistoryData() {
   const { data: workoutStats, isLoading: isStatsLoading } =
     useLatestWorkoutStats();
 
-  const { data: allActiveWorkoutSessions, isLoading: isSessionsLoading } =
-    useQuery({
-      queryKey: sessionKeys.allActiveWorkoutSessions(),
-      queryFn: () => SessionService.getAllSessions(),
-      staleTime: 2 * 60 * 1000,
-    });
+  const {
+    data: allActiveWorkoutSessions,
+    isLoading: isSessionsLoading,
+    error,
+  } = useQuery({
+    queryKey: sessionKeys.allActiveWorkoutSessions(),
+    queryFn: () => SessionService.getAllSessions(),
+    staleTime: 2 * 60 * 1000,
+  });
 
   const stats = {
     totalSessions: workoutStats?.total_sessions || 0,
@@ -50,6 +53,7 @@ export function useHistoryData() {
     stats,
     allActiveWorkoutSessions,
     isLoading,
+    error,
     handleSessionPress,
   };
 }

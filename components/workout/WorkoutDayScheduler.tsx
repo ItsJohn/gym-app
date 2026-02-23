@@ -120,9 +120,9 @@ export function WorkoutDayScheduler({
 
       <ScrollView style={styles.daysContainer}>
         {DAYS_OF_WEEK.map((dayName, index) => {
-          const dayOfWeek = index as DayOfWeek;
+          const dayOfWeek = index as unknown as DayOfWeek;
           const assignedWorkout = getWorkoutForDay(dayOfWeek);
-          const isToday = new Date().getDay() === dayOfWeek;
+          const isToday = new Date().getDay() === index;
 
           return (
             <ThemedView

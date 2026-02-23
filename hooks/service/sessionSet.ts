@@ -41,10 +41,13 @@ export const useInitializeSessionSets = () => {
   });
 };
 
+const SESSION_SET_STALE_TIME = 5 * 60 * 1000; // 5 minutes — sets don't change between renders
+
 export const useSessionSet = (id: number) => {
   return useQuery({
     queryKey: sessionSetKeys.sessionSet(id),
     queryFn: () => SessionSetService.getSessionSet(id),
+    staleTime: SESSION_SET_STALE_TIME,
   });
 };
 
@@ -52,6 +55,7 @@ export const useSessionSetsBySessionId = (sessionId: number) => {
   return useQuery<SessionSet[]>({
     queryKey: sessionSetKeys.sessionSetsBySessionId(sessionId),
     queryFn: () => SessionSetService.getSessionSetsBySessionId(sessionId),
+    staleTime: SESSION_SET_STALE_TIME,
   });
 };
 
@@ -66,6 +70,7 @@ export const useSessionSetByExerciseId = (
         sessionId,
         exerciseId,
       ),
+    staleTime: SESSION_SET_STALE_TIME,
   });
 };
 
