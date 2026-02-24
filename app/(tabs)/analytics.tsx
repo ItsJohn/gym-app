@@ -21,7 +21,7 @@ import { Colors } from "@/constants/Colors";
 
 export default function AnalyticsScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
+  const [selectedExerciseName, setSelectedExerciseName] = useState<string>("");
   const [frequencyPeriod, setFrequencyPeriod] = useState<"week" | "month">(
     "week",
   );
@@ -29,14 +29,10 @@ export default function AnalyticsScreen() {
   const { data: exercisesWithData, isLoading: isExercisesLoading } =
     useExercisesWithData();
   const { data: weightData, isLoading: isWeightLoading } =
-    useWeightProgression(selectedExerciseId);
+    useWeightProgression(selectedExerciseName);
   const { data: prData, isLoading: isPrLoading } = usePersonalRecords();
   const { data: frequencyData, isLoading: isFrequencyLoading } =
     useWorkoutFrequency(frequencyPeriod);
-
-  const selectedExercise = exercisesWithData?.find(
-    (e) => e.id === selectedExerciseId,
-  );
 
   return (
     <ParallaxScrollView
@@ -61,8 +57,8 @@ export default function AnalyticsScreen() {
             ]}
           >
             <Picker
-              selectedValue={selectedExerciseId}
-              onValueChange={(value) => setSelectedExerciseId(value)}
+              selectedValue={selectedExerciseName}
+              onValueChange={(value) => setSelectedExerciseName(value)}
               style={[styles.picker, { color: Colors[colorScheme].text }]}
               dropdownIconColor={Colors[colorScheme].text}
             >
@@ -71,7 +67,7 @@ export default function AnalyticsScreen() {
                 <Picker.Item
                   key={exercise.id}
                   label={exercise.name}
-                  value={exercise.id}
+                  value={exercise.name}
                 />
               ))}
             </Picker>
@@ -81,7 +77,7 @@ export default function AnalyticsScreen() {
         <WeightProgressionChart
           data={weightData || []}
           isLoading={isWeightLoading || isExercisesLoading}
-          exerciseName={selectedExercise?.name}
+          exerciseName={selectedExerciseName || undefined}
         />
 
         {/* <PersonalRecordsChart data={prData || []} isLoading={isPrLoading} /> */}

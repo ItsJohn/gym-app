@@ -27,7 +27,7 @@ describe("SessionSetService", () => {
         { id: "ex1", name: "Bench Press", target: { sets: "3", reps: "10" } },
         { id: "ex2", name: "Squats", target: { sets: "2", reps: "8" } },
       ]);
-      mockGetFirstRow.mockResolvedValueOnce(null); // no last session
+      mockGetAllRows.mockResolvedValueOnce([]); // no prior completed sets
       mockExecuteQuery.mockResolvedValue({ lastInsertRowId: 1 } as any);
 
       const result = await SessionSetService.initializeSessionSets(1, 1);
@@ -41,7 +41,7 @@ describe("SessionSetService", () => {
       (ExerciseService.getExercisesByWorkoutId as jest.Mock).mockResolvedValue([
         { id: "ex1", name: "Stretch", target: null },
       ]);
-      mockGetFirstRow.mockResolvedValueOnce(null); // no last session
+      mockGetAllRows.mockResolvedValueOnce([]); // no prior completed sets
       mockExecuteQuery.mockResolvedValue({ lastInsertRowId: 1 } as any);
 
       const result = await SessionSetService.initializeSessionSets(1, 1);
@@ -58,15 +58,16 @@ describe("SessionSetService", () => {
           target: { sets: "2", reps: "10", weight: 0 },
         },
       ]);
-      mockGetFirstRow.mockResolvedValueOnce({ id: 99 }); // last session
       mockGetAllRows.mockResolvedValueOnce([
         {
-          exercise_id: "ex1",
+          exercise_name: "Bench Press",
           target: JSON.stringify({ reps: "12", weight: 80 }),
+          session_id: 99,
         },
         {
-          exercise_id: "ex1",
+          exercise_name: "Bench Press",
           target: JSON.stringify({ reps: "10", weight: 75 }),
+          session_id: 99,
         },
       ]);
       mockExecuteQuery.mockResolvedValue({ lastInsertRowId: 1 } as any);
@@ -89,12 +90,12 @@ describe("SessionSetService", () => {
       (ExerciseService.getExercisesByWorkoutId as jest.Mock).mockResolvedValue([
         { id: "ex1", name: "Bench Press", target: { sets: "3", reps: "10" } },
       ]);
-      mockGetFirstRow.mockResolvedValueOnce({ id: 99 }); // last session exists
       // Only one set in history, but exercise has 3 sets
       mockGetAllRows.mockResolvedValueOnce([
         {
-          exercise_id: "ex1",
+          exercise_name: "Bench Press",
           target: JSON.stringify({ reps: "12", weight: 80 }),
+          session_id: 99,
         },
       ]);
       mockExecuteQuery.mockResolvedValue({ lastInsertRowId: 1 } as any);
@@ -109,6 +110,34 @@ describe("SessionSetService", () => {
       // Third set has no last session data, falls back to default
       expect(JSON.parse(thirdCallArgs![2] as string)).toMatchObject({
         reps: "10",
+      });
+    });
+
+    it("should use the most recent session when exercise exists across multiple sessions", async () => {
+      (ExerciseService.getExercisesByWorkoutId as jest.Mock).mockResolvedValue([
+        { id: "ex-new", name: "Squat", target: { sets: "1", reps: "5" } },
+      ]);
+      // Rows sorted by session_id DESC: session 10 is more recent than session 5
+      mockGetAllRows.mockResolvedValueOnce([
+        {
+          exercise_name: "Squat",
+          target: JSON.stringify({ reps: "5", weight: 120 }),
+          session_id: 10,
+        },
+        {
+          exercise_name: "Squat",
+          target: JSON.stringify({ reps: "5", weight: 100 }),
+          session_id: 5,
+        },
+      ]);
+      mockExecuteQuery.mockResolvedValue({ lastInsertRowId: 1 } as any);
+
+      await SessionSetService.initializeSessionSets(1, 1);
+
+      const firstCallArgs = mockExecuteQuery.mock.calls[0]![1];
+      // Should use weight from session 10 (most recent), not session 5
+      expect(JSON.parse(firstCallArgs![2] as string)).toMatchObject({
+        weight: 120,
       });
     });
   });

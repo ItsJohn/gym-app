@@ -41,7 +41,7 @@ describe("useExerciseStats", () => {
       total_sets: 45,
     });
 
-    const { result } = renderHook(() => useExerciseStats("ex-1"), {
+    const { result } = renderHook(() => useExerciseStats("Squat"), {
       wrapper: createWrapper(),
     });
 
@@ -61,7 +61,7 @@ describe("useExerciseStats", () => {
       total_sets: 10,
     });
 
-    const { result } = renderHook(() => useExerciseStats("ex-2"), {
+    const { result } = renderHook(() => useExerciseStats("Bench Press"), {
       wrapper: createWrapper(),
     });
 
@@ -77,7 +77,7 @@ describe("useExerciseStats", () => {
       total_sets: 0,
     });
 
-    const { result } = renderHook(() => useExerciseStats("ex-3"), {
+    const { result } = renderHook(() => useExerciseStats("Deadlift"), {
       wrapper: createWrapper(),
     });
 
@@ -93,7 +93,7 @@ describe("useExerciseStats", () => {
   it("should handle null database result", async () => {
     mockGetFirstRow.mockResolvedValueOnce(null);
 
-    const { result } = renderHook(() => useExerciseStats("ex-4"), {
+    const { result } = renderHook(() => useExerciseStats("Overhead Press"), {
       wrapper: createWrapper(),
     });
 
@@ -106,7 +106,7 @@ describe("useExerciseStats", () => {
     });
   });
 
-  it("should not fetch when exerciseId is empty", () => {
+  it("should not fetch when exerciseName is empty", () => {
     const { result } = renderHook(() => useExerciseStats(""), {
       wrapper: createWrapper(),
     });
@@ -116,30 +116,30 @@ describe("useExerciseStats", () => {
     expect(mockGetFirstRow).not.toHaveBeenCalled();
   });
 
-  it("should call getFirstRow with the correct SQL and params", async () => {
+  it("should call getFirstRow with name-based JOIN query and exercise name param", async () => {
     mockGetFirstRow.mockResolvedValueOnce({
       personal_record: 50,
       average_weight: 40,
       total_sets: 5,
     });
 
-    const { result } = renderHook(() => useExerciseStats("ex-5"), {
+    const { result } = renderHook(() => useExerciseStats("Romanian Deadlift"), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockGetFirstRow).toHaveBeenCalledWith(
+      expect.stringContaining("JOIN exercises e ON ss.exercise_id = e.id"),
+      ["Romanian Deadlift"],
+    );
+    expect(mockGetFirstRow).toHaveBeenCalledWith(
+      expect.stringContaining("e.name = ?"),
+      ["Romanian Deadlift"],
+    );
+    expect(mockGetFirstRow).toHaveBeenCalledWith(
       expect.stringContaining("MAX(CAST(json_extract"),
-      ["ex-5"],
-    );
-    expect(mockGetFirstRow).toHaveBeenCalledWith(
-      expect.stringContaining("AVG(CAST(json_extract"),
-      ["ex-5"],
-    );
-    expect(mockGetFirstRow).toHaveBeenCalledWith(
-      expect.stringContaining("COUNT(*)"),
-      ["ex-5"],
+      ["Romanian Deadlift"],
     );
   });
 
@@ -150,7 +150,7 @@ describe("useExerciseStats", () => {
       total_sets: 3,
     });
 
-    const { result } = renderHook(() => useExerciseStats("ex-6"), {
+    const { result } = renderHook(() => useExerciseStats("Leg Press"), {
       wrapper: createWrapper(),
     });
 

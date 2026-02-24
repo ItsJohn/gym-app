@@ -19,7 +19,9 @@ export default function SetHeader({ setNumber, exercise }: SetHeaderProps) {
       case "reps-per-side":
         return `Target: ${exercise.target.per_side} reps per side`;
       case "duration":
-        return `Target: ${exercise.target.duration}s duration`;
+        return exercise.target.sets
+          ? `Target: ${exercise.target.sets} sets of ${exercise.target.duration}s`
+          : `Target: ${exercise.target.duration}s duration`;
       case "distance":
         return `Target: ${exercise.target.distance}m distance`;
       default:

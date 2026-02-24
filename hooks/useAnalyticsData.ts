@@ -3,8 +3,8 @@ import { getAllRows } from "@/database/database";
 
 export const analyticsKeys = {
   analytics: () => ["analytics"] as const,
-  weightProgression: (exerciseId: string) =>
-    [...analyticsKeys.analytics(), "weightProgression", exerciseId] as const,
+  weightProgression: (exerciseName: string) =>
+    [...analyticsKeys.analytics(), "weightProgression", exerciseName] as const,
   personalRecords: () =>
     [...analyticsKeys.analytics(), "personalRecords"] as const,
   workoutFrequency: (period: "week" | "month") =>
@@ -56,9 +56,9 @@ export const useExercisesWithData = () => {
   });
 };
 
-export const useWeightProgression = (exerciseId: string) => {
+export const useWeightProgression = (exerciseName: string) => {
   return useQuery({
-    queryKey: analyticsKeys.weightProgression(exerciseId),
+    queryKey: analyticsKeys.weightProgression(exerciseName),
     queryFn: async (): Promise<WeightProgressionPoint[]> => {
       const results = await getAllRows<{
         weight: number;
@@ -70,12 +70,13 @@ export const useWeightProgression = (exerciseId: string) => {
            json_extract(ss.target, '$.reps') as reps,
            ss.completed_at
          FROM session_set ss
-         WHERE ss.exercise_id = ?
+         JOIN exercises e ON ss.exercise_id = e.id
+         WHERE e.name = ?
            AND ss.is_completed = 1
            AND ss.completed_at IS NOT NULL
            AND json_extract(ss.target, '$.weight') IS NOT NULL
          ORDER BY ss.completed_at ASC`,
-        [exerciseId],
+        [exerciseName],
       );
 
       return results
@@ -86,7 +87,7 @@ export const useWeightProgression = (exerciseId: string) => {
           reps: r.reps ? parseInt(r.reps, 10) : undefined,
         }));
     },
-    enabled: !!exerciseId,
+    enabled: !!exerciseName,
     staleTime: 5 * 60 * 1000,
   });
 };

@@ -8,12 +8,12 @@ export interface ExerciseStatsData {
   totalSetsCompleted: number;
 }
 
-export const useExerciseStats = (exerciseId: string) => {
+export const useExerciseStats = (exerciseName: string) => {
   return useQuery({
     queryKey: [
       ...analyticsKeys.analytics(),
       "exerciseStats",
-      exerciseId,
+      exerciseName,
     ] as const,
     queryFn: async (): Promise<ExerciseStatsData> => {
       const result = await getFirstRow<{
@@ -26,11 +26,12 @@ export const useExerciseStats = (exerciseId: string) => {
            AVG(CAST(json_extract(ss.target, '$.weight') AS REAL)) as average_weight,
            COUNT(*) as total_sets
          FROM session_set ss
-         WHERE ss.exercise_id = ?
+         JOIN exercises e ON ss.exercise_id = e.id
+         WHERE e.name = ?
            AND ss.is_completed = 1
            AND json_extract(ss.target, '$.weight') IS NOT NULL
            AND json_extract(ss.target, '$.weight') > 0`,
-        [exerciseId],
+        [exerciseName],
       );
 
       return {
@@ -41,7 +42,7 @@ export const useExerciseStats = (exerciseId: string) => {
         totalSetsCompleted: result?.total_sets ?? 0,
       };
     },
-    enabled: !!exerciseId,
+    enabled: !!exerciseName,
     staleTime: 5 * 60 * 1000,
   });
 };

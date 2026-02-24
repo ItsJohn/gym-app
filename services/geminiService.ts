@@ -177,7 +177,7 @@ Target structures (match exactly):
 - "reps" → { "reps": "10" }
 - "reps-sets" → { "sets": "3", "reps": "8-12" }
 - "reps-per-side" → { "sets": "3", "per_side": "10" }
-- "duration" → { "duration": "45" }  // seconds
+- "duration" → { "sets": "3", "duration": "45" }  // sets × seconds; omit "sets" only for single-set exercises
 - "distance" → { "distance": "400" }  // meters
 Never invent additional types. Never combine incompatible target fields.
 
