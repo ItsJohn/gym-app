@@ -17,10 +17,7 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "resourceClass": "m-medium"
-      },
-      "android": {
-        "resourceClass": "medium"
+        "simulator": false
       }
     },
     "production": {
@@ -37,9 +34,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "YOUR_APPLE_ID_EMAIL",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+        "appleId": "john.j.kelly94@gmail.com",
+        "ascAppId": "6759879523",
+        "appleTeamId": "UT832G5588"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
