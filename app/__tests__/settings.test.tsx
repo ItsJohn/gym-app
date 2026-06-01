@@ -30,6 +30,12 @@ jest.mock(
 jest.mock("@/components/settings/SettingSwitch", () => ({ title }: any) => (
   <div data-testid={`setting-switch-${title}`}>{title}</div>
 ));
+jest.mock("@/components/settings/StravaConnect", () => () => (
+  <div data-testid="strava-connect" />
+));
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn() },
+}));
 
 const mockUseSettingsActions = jest.fn();
 jest.mock("@/hooks/useSettingsActions", () => ({

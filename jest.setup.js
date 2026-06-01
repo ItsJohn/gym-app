@@ -9,6 +9,12 @@ jest.mock('expo-sqlite', () => ({
   deleteDatabaseAsync: jest.fn(),
 }));
 
+// Mock expo-web-browser
+jest.mock('expo-web-browser', () => ({
+  openAuthSessionAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
+  openBrowserAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
+}));
+
 // Mock console methods to reduce noise in tests
 global.console = {
   ...console,
