@@ -36,6 +36,9 @@ jest.mock("@/components/workout/WorkoutCard", () => ({
     <div data-testid={`workout-card-${workout.id}`}>{workout.title}</div>
   ),
 }));
+jest.mock("@/components/workout/TrainingPlanSection", () => ({
+  TrainingPlanSection: () => <div data-testid="training-plan-section" />,
+}));
 jest.mock("@/components/workout/WorkoutScheduleManager", () => () => (
   <div data-testid="schedule-manager" />
 ));

@@ -24,6 +24,14 @@ export function useTodaysPlanDay() {
   });
 }
 
+export function useCurrentWeekPlan() {
+  return useQuery({
+    queryKey: [...trainingPlanKeys.all, "currentWeek"] as const,
+    queryFn: () => TrainingPlanService.getCurrentWeekDays(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useDeletePlan() {
   const queryClient = useQueryClient();
   return useMutation({

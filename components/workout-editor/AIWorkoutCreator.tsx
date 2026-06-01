@@ -26,6 +26,7 @@ import { ExperienceButton } from "./ExperienceButton";
 interface AIWorkoutCreatorProps {
   onWorkoutProgramGenerated: (result: AIWorkoutResult) => void;
   onCancel: () => void;
+  onSuggestTrainingPlan?: () => void;
   initialValues?: {
     goals: string;
     issues: string;
@@ -36,9 +37,22 @@ interface AIWorkoutCreatorProps {
   previousProgram?: WorkoutGoals["previousProgram"];
 }
 
+const RUNNING_GOAL_KEYWORDS = [
+  "marathon",
+  "half marathon",
+  "half-marathon",
+  "5k",
+  "10k",
+  "running plan",
+  "run a race",
+  "race training",
+  "train for a run",
+];
+
 export default function AIWorkoutCreator({
   onWorkoutProgramGenerated,
   onCancel,
+  onSuggestTrainingPlan,
   initialValues,
   previousProgram,
 }: Readonly<AIWorkoutCreatorProps>) {
@@ -79,6 +93,25 @@ export default function AIWorkoutCreator({
       Alert.alert(
         "Invalid Training Days",
         "Please enter a number between 1 and 7 for training days per week.",
+      );
+      return;
+    }
+
+    const lowerGoals = goals.toLowerCase();
+    const isRunningGoal = RUNNING_GOAL_KEYWORDS.some((kw) =>
+      lowerGoals.includes(kw),
+    );
+    if (isRunningGoal && onSuggestTrainingPlan) {
+      Alert.alert(
+        "Running Goal Detected",
+        "Your goal sounds like a running or race target. The Training Plan feature is built for this — it creates a full progressive schedule with easy runs, tempo runs, intervals, long runs, and gym sessions.\n\nWould you like to use it instead?",
+        [
+          {
+            text: "Use Training Plan",
+            onPress: onSuggestTrainingPlan,
+          },
+          { text: "Continue Anyway", style: "cancel" },
+        ],
       );
       return;
     }
@@ -163,6 +196,7 @@ export default function AIWorkoutCreator({
     timeAvailable,
     trainingDaysPerWeek,
     onWorkoutProgramGenerated,
+    onSuggestTrainingPlan,
   ]);
 
   const textInputStyle = [

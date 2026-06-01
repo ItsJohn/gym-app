@@ -46,7 +46,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export class GeminiService {
   private static model = genAI.getGenerativeModel({
-    model: "gemini-3.1-pro-preview",
+    model: "gemini-1.5-flash",
   });
 
   private static validateInput(goals: WorkoutGoals): WorkoutGoals {
@@ -206,6 +206,7 @@ Target structures (match exactly):
 - "duration" → { "sets": "3", "duration": "45" }  // sets × seconds; omit "sets" only for single-set exercises
 - "distance" → { "distance": "400" }  // meters
 Never invent additional types. Never combine incompatible target fields.
+For cardio exercises (running, cycling, rowing, etc.) with type "duration", duration must be at least 1200 seconds (20 minutes). Use type "distance" with meters for short sprint/interval drills.
 
 YOUTUBE URL RULES (VERY STRICT)
 * "video_url" and "suggested_playlist" are OPTIONAL fields.

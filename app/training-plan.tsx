@@ -1,25 +1,24 @@
 import { ExerciseService } from "@/database/services/exerciseService";
 import { TrainingPlanService } from "@/database/services/trainingPlanService";
 import { WorkoutService } from "@/database/services/workoutService";
+import GymLogo from "@/components/GymLogo";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { GeminiService } from "@/services/geminiService";
 import { trainingPlanKeys } from "@/hooks/useTrainingPlan";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const GOAL_SUGGESTIONS = [
   "Run a half marathon in 12 weeks",
@@ -33,6 +32,17 @@ export default function TrainingPlanScreen() {
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState("");
   const queryClient = useQueryClient();
+
+  const inputBackground = useThemeColor(
+    { light: "rgba(74, 144, 226, 0.05)", dark: "rgba(255, 255, 255, 0.1)" },
+    "background",
+  );
+  const inputBorder = useThemeColor(
+    { light: "rgba(74, 144, 226, 0.3)", dark: "rgba(255, 255, 255, 0.2)" },
+    "tint",
+  );
+  const inputText = useThemeColor({}, "text");
+  const placeholderColor = useThemeColor({}, "tabIconDefault");
 
   const handleGenerate = async () => {
     if (!goalText.trim()) {
@@ -53,7 +63,6 @@ export default function TrainingPlanScreen() {
       );
 
       setStatus("Saving gym workouts...");
-      // Save gym workouts and collect their IDs
       const gymWorkoutIds: number[] = [];
       for (const workout of response.gym_workouts) {
         const workoutId = await WorkoutService.createWorkout(workout);
@@ -66,14 +75,10 @@ export default function TrainingPlanScreen() {
         }
       }
 
-      // Resolve gym_workout_index → actual workout_id
       const resolvedDays = planDays.map((day) => {
         const gymIndex = (day as any)._gym_workout_index;
         if (day.day_type === "gym" && gymIndex !== undefined) {
-          return {
-            ...day,
-            workout_id: gymWorkoutIds[gymIndex],
-          };
+          return { ...day, workout_id: gymWorkoutIds[gymIndex] };
         }
         return day;
       });
@@ -108,114 +113,107 @@ export default function TrainingPlanScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+      headerImage={<GymLogo />}
+    >
+      <ThemedView style={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
         >
+          <ThemedText style={styles.backText}>← Back</ThemedText>
+        </TouchableOpacity>
+
+        <ThemedText type="title" style={styles.title}>
+          Create Training Plan
+        </ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Tell AI your goal and it will build you a complete running + gym plan.
+        </ThemedText>
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBackground,
+              borderColor: inputBorder,
+              color: inputText,
+            },
+          ]}
+          placeholder="e.g. I want to run a half marathon in 13 weeks and build strength"
+          placeholderTextColor={placeholderColor}
+          value={goalText}
+          onChangeText={setGoalText}
+          multiline
+          numberOfLines={3}
+          editable={!generating}
+        />
+
+        <ThemedText style={styles.suggestionsLabel}>
+          Try one of these:
+        </ThemedText>
+        {GOAL_SUGGESTIONS.map((s) => (
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
+            key={s}
+            style={[styles.suggestionChip, { borderColor: inputBorder }]}
+            onPress={() => setGoalText(s)}
+            disabled={generating}
           >
-            <ThemedText style={styles.backText}>← Back</ThemedText>
+            <ThemedText style={styles.suggestionText}>{s}</ThemedText>
           </TouchableOpacity>
+        ))}
 
-          <ThemedText type="title" style={styles.title}>
-            Create Training Plan
+        <ThemedView style={[styles.infoBox, { borderColor: inputBorder }]}>
+          <ThemedText style={styles.infoText}>
+            The AI will create a progressive multi-week plan with easy runs,
+            tempo runs, intervals, long runs, and runner-specific gym sessions.
+            Your home screen will show what to do each day.
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Tell AI your goal and it will build you a complete running + gym
-            plan.
-          </ThemedText>
+        </ThemedView>
 
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. I want to run a half marathon in 12 weeks"
-            placeholderTextColor="#888"
-            value={goalText}
-            onChangeText={setGoalText}
-            multiline
-            numberOfLines={3}
-            editable={!generating}
-          />
-
-          <ThemedText style={styles.suggestionsLabel}>
-            Try one of these:
-          </ThemedText>
-          {GOAL_SUGGESTIONS.map((s) => (
-            <TouchableOpacity
-              key={s}
-              style={styles.suggestionChip}
-              onPress={() => setGoalText(s)}
-              disabled={generating}
-            >
-              <ThemedText style={styles.suggestionText}>{s}</ThemedText>
-            </TouchableOpacity>
-          ))}
-
-          <View style={styles.infoBox}>
-            <ThemedText style={styles.infoText}>
-              The AI will create a progressive multi-week plan with easy runs,
-              tempo runs, intervals, long runs, and runner-specific gym
-              sessions. Your home screen will show what to do each day.
-            </ThemedText>
+        {generating ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF6B35" />
+            <ThemedText style={styles.statusText}>{status}</ThemedText>
           </View>
-
-          {generating ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FF6B35" />
-              <ThemedText style={styles.statusText}>{status}</ThemedText>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={[
-                styles.generateButton,
-                !goalText.trim() && styles.generateButtonDisabled,
-              ]}
-              onPress={handleGenerate}
-              disabled={!goalText.trim()}
-            >
-              <ThemedText style={styles.generateButtonText}>
-                Generate My Plan
-              </ThemedText>
-            </TouchableOpacity>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.generateButton,
+              !goalText.trim() && styles.generateButtonDisabled,
+            ]}
+            onPress={handleGenerate}
+            disabled={!goalText.trim()}
+          >
+            <ThemedText style={styles.generateButtonText}>
+              Generate My Plan
+            </ThemedText>
+          </TouchableOpacity>
+        )}
+      </ThemedView>
+    </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0a0a1a" },
-  flex: { flex: 1 },
-  container: { padding: 20, paddingBottom: 40 },
-  backButton: { marginBottom: 16 },
+  container: { padding: 16, gap: 4, paddingBottom: 40 },
+  backButton: { marginBottom: 8 },
   backText: { color: "#FF6B35", fontSize: 16 },
-  title: { fontSize: 28, fontWeight: "bold", color: "white", marginBottom: 8 },
-  subtitle: { color: "#aaa", fontSize: 15, marginBottom: 24, lineHeight: 22 },
+  title: { marginBottom: 4 },
+  subtitle: { opacity: 0.7, fontSize: 15, marginBottom: 20, lineHeight: 22 },
   input: {
-    backgroundColor: "#1a1a2e",
     borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 12,
-    padding: 16,
-    color: "white",
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
     minHeight: 90,
     textAlignVertical: "top",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  suggestionsLabel: { color: "#888", fontSize: 13, marginBottom: 10 },
+  suggestionsLabel: { opacity: 0.6, fontSize: 13, marginBottom: 8 },
   suggestionChip: {
-    backgroundColor: "#1a1a2e",
     borderWidth: 1,
-    borderColor: "#FF6B3544",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -223,21 +221,21 @@ const styles = StyleSheet.create({
   },
   suggestionText: { color: "#FF6B35", fontSize: 14 },
   infoBox: {
-    backgroundColor: "#1a1a2e",
+    borderWidth: 1,
     borderRadius: 10,
     padding: 14,
-    marginTop: 16,
+    marginTop: 8,
     marginBottom: 24,
   },
-  infoText: { color: "#aaa", fontSize: 13, lineHeight: 20 },
+  infoText: { opacity: 0.7, fontSize: 13, lineHeight: 20 },
   loadingContainer: { alignItems: "center", paddingVertical: 24 },
-  statusText: { color: "#aaa", marginTop: 12, fontSize: 14 },
+  statusText: { opacity: 0.6, marginTop: 12, fontSize: 14 },
   generateButton: {
     backgroundColor: "#FF6B35",
-    borderRadius: 14,
+    borderRadius: 8,
     paddingVertical: 16,
     alignItems: "center",
   },
   generateButtonDisabled: { opacity: 0.4 },
-  generateButtonText: { color: "white", fontSize: 17, fontWeight: "bold" },
+  generateButtonText: { color: "white", fontSize: 16, fontWeight: "600" },
 });

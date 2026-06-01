@@ -159,6 +159,30 @@ export class TrainingPlanService {
     return { plan, day: dayWithDetails };
   }
 
+  static async getCurrentWeekDays(): Promise<{
+    plan: TrainingPlan;
+    currentWeek: number;
+    days: TrainingPlanDayWithDetails[];
+  } | null> {
+    const plan = await this.getActivePlan();
+    if (!plan) return null;
+
+    const planCreated = new Date(plan.created_at);
+    planCreated.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const daysSinceStart = Math.floor(
+      (today.getTime() - planCreated.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    const currentWeek = Math.floor(daysSinceStart / 7) + 1;
+
+    if (currentWeek > plan.total_weeks) return null;
+
+    const days = await this.getWeekDays(plan.id, currentWeek);
+    return { plan, currentWeek, days };
+  }
+
   static async getWeekDays(
     planId: number,
     weekNumber: number,

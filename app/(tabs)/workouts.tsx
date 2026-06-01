@@ -8,6 +8,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { EmptyState } from "@/components/workout/EmptyState";
 import { ScheduleInfo } from "@/components/workout/ScheduleInfo";
+import { TrainingPlanSection } from "@/components/workout/TrainingPlanSection";
 import { WorkoutCard } from "@/components/workout/WorkoutCard";
 import WorkoutScheduleManager from "@/components/workout/WorkoutScheduleManager";
 import { useActiveWorkouts, useDeleteWorkout } from "@/hooks";
@@ -134,6 +135,8 @@ export default function WorkoutsScreen() {
               </ThemedText>
             </TouchableOpacity>
           </ThemedView>
+
+          <TrainingPlanSection />
 
           <ScheduleInfo />
 
