@@ -46,7 +46,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export class GeminiService {
   private static model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.1-pro-preview",
   });
 
   private static validateInput(goals: WorkoutGoals): WorkoutGoals {
@@ -288,9 +288,7 @@ Return nothing except the JSON array.`;
     return cleaned;
   }
 
-  static async generateTrainingPlan(
-    goalText: string,
-  ): Promise<{
+  static async generateTrainingPlan(goalText: string): Promise<{
     response: TrainingPlanAIResponse;
     planDays: CreatePlanDayInput[];
   }> {
