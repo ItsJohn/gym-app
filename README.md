@@ -117,6 +117,21 @@ The app uses local SQLite storage, so no additional environment variables are re
 
 **Note**: The AI workout generation feature requires a valid Gemini API key to function. Without it, you can still use all other features of the app including manual workout creation and tracking.
 
+#### Setting up Strava Integration (optional)
+
+Strava sync imports your runs automatically each time you open the app.
+
+1. Go to [strava.com/settings/api](https://www.strava.com/settings/api) and create an app
+2. Set **Authorization Callback Domain** to `strava-auth`
+3. Add to your `.env.local`:
+   ```
+   EXPO_PUBLIC_STRAVA_CLIENT_ID=your_client_id
+   EXPO_PUBLIC_STRAVA_CLIENT_SECRET=your_client_secret
+   ```
+4. In the app, go to **Settings → Strava → Connect Strava**
+
+**Note**: Once connected, runs sync automatically on every app open. Only Run, TrailRun, and VirtualRun activity types are imported.
+
 ## Project Structure
 
 ```
