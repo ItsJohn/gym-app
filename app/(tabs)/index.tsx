@@ -11,7 +11,9 @@ import {
   WorkoutRenewalBanner,
 } from "@/components/home";
 import ContinueWorkoutButton from "@/components/home/ContinueWorkoutButton";
+import RestDayCard from "@/components/home/RestDayCard";
 import SchedulePreview from "@/components/home/SchedulePreview";
+import TodaysRunButton from "@/components/home/TodaysRunButton";
 import TodaysWorkoutButton from "@/components/home/TodaysWorkoutButton";
 import { WorkoutCompleteButton } from "@/components/home/WorkoutCompleteButton";
 import { EmptyState } from "@/components/landing/EmptyState";
@@ -26,6 +28,8 @@ import {
   useTodaysWorkoutCompletion,
   useWorkoutRenewalNotice,
 } from "@/hooks";
+import { useTodaysPlanDay } from "@/hooks/useTrainingPlan";
+import { useStravaSync } from "@/hooks/useStravaSync";
 
 export default function HomeScreen() {
   const { stats, recentSession, isLoading } = useHomeData();
@@ -40,6 +44,11 @@ export default function HomeScreen() {
     isLoading: isTodaysWorkoutCompletedLoading,
   } = useTodaysWorkoutCompletion();
   const { data: renewalNotice } = useWorkoutRenewalNotice();
+  const { data: todaysPlanDay, isLoading: isPlanDayLoading } =
+    useTodaysPlanDay();
+
+  // Silently sync Strava in the background on every app open
+  useStravaSync();
 
   const handleManageWorkouts = useCallback(() => {
     router.push("/(tabs)/workouts");
@@ -54,7 +63,8 @@ export default function HomeScreen() {
     isTodaysWorkoutLoading ||
     isNextWorkoutLoading ||
     isIncompleteSessionLoading ||
-    isTodaysWorkoutCompletedLoading
+    isTodaysWorkoutCompletedLoading ||
+    isPlanDayLoading
   ) {
     return (
       <ParallaxScrollView
@@ -69,9 +79,46 @@ export default function HomeScreen() {
     );
   }
 
-  if (stats.totalWorkouts === 0) {
+  if (stats.totalWorkouts === 0 && !todaysPlanDay) {
     return <EmptyState />;
   }
+
+  // Determine today's primary card based on active training plan
+  const renderTodayCard = () => {
+    if (todaysPlanDay) {
+      const { day } = todaysPlanDay;
+
+      if (day.day_type === "rest") {
+        return <RestDayCard />;
+      }
+
+      if (day.day_type === "run") {
+        return <TodaysRunButton planDay={todaysPlanDay} />;
+      }
+
+      // gym day from plan — navigate to the plan's workout by ID
+      if (day.day_type === "gym" && day.workout_id) {
+        const planWorkout = {
+          id: day.workout_id,
+          title: day.workout_title ?? "Gym Session",
+          description: "Training plan workout",
+        } as any;
+        return <TodaysWorkoutButton workout={planWorkout} />;
+      }
+    }
+
+    // No active plan — use existing schedule logic
+    if (todaysWorkoutCompleted) {
+      return <WorkoutCompleteButton workout={todaysWorkout!} />;
+    }
+    if (todaysWorkout) {
+      return <TodaysWorkoutButton workout={todaysWorkout!} />;
+    }
+    if (incompleteSession) {
+      return <ContinueWorkoutButton session={incompleteSession} />;
+    }
+    return <NextWorkout nextWorkout={nextWorkout?.workout} />;
+  };
 
   return (
     <ParallaxScrollView
@@ -84,15 +131,7 @@ export default function HomeScreen() {
         <WorkoutRenewalBanner weeksOld={renewalNotice.weeksOld} />
       )}
 
-      {todaysWorkoutCompleted ? (
-        <WorkoutCompleteButton workout={todaysWorkout!} />
-      ) : todaysWorkout ? (
-        <TodaysWorkoutButton workout={todaysWorkout!} />
-      ) : incompleteSession ? (
-        <ContinueWorkoutButton session={incompleteSession} />
-      ) : (
-        <NextWorkout nextWorkout={nextWorkout?.workout} />
-      )}
+      {renderTodayCard()}
 
       <QuickStats
         totalWorkouts={stats.totalWorkouts}

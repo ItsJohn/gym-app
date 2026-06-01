@@ -4,8 +4,34 @@ import {
   Workout,
   WorkoutGoals,
 } from "@/validation/schemas";
+import { CreatePlanDayInput } from "@/database/services/trainingPlanService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { YouTubeVerificationService } from "./youtubeVerificationService";
+
+export interface TrainingPlanAIResponse {
+  plan_name: string;
+  total_weeks: number;
+  gym_workouts: Workout[];
+  schedule: Array<{
+    week: number;
+    days: Array<{
+      day_of_week: number;
+      type:
+        | "easy_run"
+        | "tempo_run"
+        | "intervals"
+        | "long_run"
+        | "race"
+        | "gym"
+        | "rest";
+      distance_km?: number;
+      pace_note?: string;
+      duration_minutes?: number;
+      notes?: string;
+      gym_workout_index?: number;
+    }>;
+  }>;
+}
 
 // You'll need to add your Gemini API key to your environment
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
@@ -260,6 +286,157 @@ Return nothing except the JSON array.`;
     cleaned = cleaned.replace(/```json\s*/g, "").replace(/```\s*/g, "");
 
     return cleaned;
+  }
+
+  static async generateTrainingPlan(
+    goalText: string,
+  ): Promise<{
+    response: TrainingPlanAIResponse;
+    planDays: CreatePlanDayInput[];
+  }> {
+    if (!API_KEY) throw new Error("Gemini API key not configured");
+
+    const prompt = `You are an expert running coach and strength trainer. A user has described their fitness goal: "${goalText}"
+
+Analyze this goal and create a structured training plan that combines running and gym workouts. The plan should prepare them for their goal safely and progressively.
+
+REQUIREMENTS:
+1. Determine appropriate total_weeks based on the goal (8-20 weeks typical for half marathon)
+2. Create 2-3 gym workouts specifically designed for runners (legs/glutes, core stability, upper body endurance)
+3. Build the weekly schedule with progressive overload - runs get longer/harder each week
+4. Include rest days (at least 1-2 per week)
+5. Running day types: easy_run (recovery), tempo_run (comfortably hard), intervals (speed work), long_run (weekly long run), race
+
+GYM WORKOUT FORMAT (same as existing app format):
+${JSON.stringify(
+  {
+    title: "Runner's Strength A",
+    description: "Lower body and core for running power",
+    expected_duration: 45,
+    exercises: [
+      {
+        name: "Bulgarian Split Squat",
+        type: "reps-sets",
+        target: { sets: "3", reps: "10-12" },
+        muscle_group: "Legs",
+        difficulty: "intermediate",
+        rest_seconds: 90,
+        notes: "Single leg strength for running",
+      },
+    ],
+  },
+  null,
+  2,
+)}
+
+EXERCISE TYPE RULES (STRICT):
+- "reps" → { "reps": "10" }
+- "reps-sets" → { "sets": "3", "reps": "8-12" }
+- "reps-per-side" → { "sets": "3", "per_side": "10" }
+- "duration" → { "sets": "3", "duration": "45" }
+- "distance" → { "distance": "400" }
+
+YOUTUBE URL RULES: Only include video_url if 100% certain the URL exists. Otherwise omit.
+
+RESPONSE FORMAT - Return ONLY valid JSON:
+{
+  "plan_name": "Half Marathon Training Plan",
+  "total_weeks": 10,
+  "gym_workouts": [...],
+  "schedule": [
+    {
+      "week": 1,
+      "days": [
+        { "day_of_week": 1, "type": "easy_run", "distance_km": 5, "pace_note": "Easy conversational pace", "notes": "First run, keep it relaxed" },
+        { "day_of_week": 2, "type": "gym", "gym_workout_index": 0 },
+        { "day_of_week": 3, "type": "rest" },
+        { "day_of_week": 4, "type": "tempo_run", "distance_km": 4, "pace_note": "Comfortably hard, can speak short phrases" },
+        { "day_of_week": 5, "type": "gym", "gym_workout_index": 1 },
+        { "day_of_week": 6, "type": "long_run", "distance_km": 10, "pace_note": "Slow and steady, much slower than race pace" },
+        { "day_of_week": 0, "type": "rest" }
+      ]
+    }
+  ]
+}
+
+day_of_week: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+gym_workout_index: index into the gym_workouts array (0-based)
+Each week must have EXACTLY 7 day entries (one per day_of_week 0-6).
+Return nothing except the JSON object.`;
+
+    const result = await this.model.generateContent(prompt);
+    const cleanedText = this.removeAIResponseFormatting(result.response.text());
+
+    let parsed: TrainingPlanAIResponse;
+    try {
+      parsed = JSON.parse(cleanedText);
+    } catch {
+      throw new Error(
+        "AI returned invalid JSON for training plan. Please try again.",
+      );
+    }
+
+    // Fix gym workout exercise types
+    if (parsed.gym_workouts && Array.isArray(parsed.gym_workouts)) {
+      parsed.gym_workouts = this.fixExerciseTypes(parsed.gym_workouts);
+      parsed.gym_workouts =
+        await YouTubeVerificationService.verifyAndCleanWorkoutUrls(
+          parsed.gym_workouts,
+        );
+    }
+
+    // Convert AI response into CreatePlanDayInput array
+    const planDays: CreatePlanDayInput[] = [];
+    const runTypeMap: Record<
+      string,
+      "easy" | "tempo" | "intervals" | "long" | "race"
+    > = {
+      easy_run: "easy",
+      tempo_run: "tempo",
+      intervals: "intervals",
+      long_run: "long",
+      race: "race",
+    };
+
+    for (const week of parsed.schedule) {
+      for (const day of week.days) {
+        if (day.type === "rest") {
+          planDays.push({
+            week_number: week.week,
+            day_of_week: day.day_of_week,
+            day_type: "rest",
+          });
+        } else if (day.type === "gym") {
+          const gymWorkout = parsed.gym_workouts[day.gym_workout_index ?? 0];
+          planDays.push({
+            week_number: week.week,
+            day_of_week: day.day_of_week,
+            day_type: "gym",
+            // workout_id will be set after gym workouts are saved to DB
+            // Store gym_workout_index in notes field temporarily via metadata
+          });
+          // Attach gym_workout_index for caller to resolve
+          (planDays[planDays.length - 1] as any)._gym_workout_index =
+            day.gym_workout_index ?? 0;
+        } else {
+          const runType = runTypeMap[day.type] ?? "easy";
+          planDays.push({
+            week_number: week.week,
+            day_of_week: day.day_of_week,
+            day_type: "run",
+            run_target: {
+              run_type: runType,
+              distance_km: day.distance_km ?? 5,
+              pace_note: day.pace_note,
+              duration_minutes: day.duration_minutes,
+              notes: day.notes,
+            },
+          });
+        }
+      }
+    }
+
+    return { response: parsed, planDays };
   }
 
   private static fixExerciseTypes(response: any[]): any[] {

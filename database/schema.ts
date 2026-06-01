@@ -29,6 +29,62 @@ export const CREATE_WORKOUTS_TABLE = `
   );
 `;
 
+export const CREATE_TRAINING_PLANS_TABLE = `
+  CREATE TABLE IF NOT EXISTS training_plans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    goal_text TEXT NOT NULL,
+    goal_date TEXT,
+    total_weeks INTEGER NOT NULL,
+    is_active BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+
+export const CREATE_TRAINING_PLAN_DAYS_TABLE = `
+  CREATE TABLE IF NOT EXISTS training_plan_days (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id INTEGER NOT NULL,
+    week_number INTEGER NOT NULL,
+    day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
+    day_type TEXT NOT NULL CHECK (day_type IN ('run', 'gym', 'rest')),
+    workout_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (plan_id) REFERENCES training_plans (id) ON DELETE CASCADE,
+    FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE SET NULL
+  );
+`;
+
+export const CREATE_RUN_TARGETS_TABLE = `
+  CREATE TABLE IF NOT EXISTS run_targets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_day_id INTEGER NOT NULL,
+    run_type TEXT NOT NULL CHECK (run_type IN ('easy', 'tempo', 'intervals', 'long', 'race')),
+    distance_km REAL NOT NULL,
+    pace_note TEXT,
+    duration_minutes INTEGER,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (plan_day_id) REFERENCES training_plan_days (id) ON DELETE CASCADE
+  );
+`;
+
+export const CREATE_RUN_SESSIONS_TABLE = `
+  CREATE TABLE IF NOT EXISTS run_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    strava_id TEXT UNIQUE NOT NULL,
+    name TEXT,
+    distance_m REAL NOT NULL,
+    duration_secs INTEGER NOT NULL,
+    avg_pace_secs_per_km REAL,
+    avg_hr INTEGER,
+    max_hr INTEGER,
+    started_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+
 export const MIGRATIONS = [
   "ALTER TABLE workouts ADD COLUMN ai_goals TEXT;",
   "ALTER TABLE workouts ADD COLUMN ai_issues TEXT;",
@@ -118,5 +174,9 @@ export const ALL_TABLES = [
   CREATE_WORKOUT_SESSIONS_TABLE,
   CREATE_EXERCISE_SETS_TABLE,
   CREATE_WORKOUT_SCHEDULES_TABLE,
+  CREATE_TRAINING_PLANS_TABLE,
+  CREATE_TRAINING_PLAN_DAYS_TABLE,
+  CREATE_RUN_TARGETS_TABLE,
+  CREATE_RUN_SESSIONS_TABLE,
   ...CREATE_INDEXES,
 ];

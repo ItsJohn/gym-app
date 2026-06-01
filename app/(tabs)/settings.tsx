@@ -3,6 +3,7 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 import SettingItem from "@/components/settings/SettingItem";
 import SettingSection from "@/components/settings/SettingSection";
 import SettingSwitch from "@/components/settings/SettingSwitch";
+import StravaConnect from "@/components/settings/StravaConnect";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -12,6 +13,7 @@ import {
   formatRestSound,
   formatTheme,
 } from "@/hooks/useSettingsActions";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
@@ -40,6 +42,18 @@ export default function SettingsScreen() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
+        <SettingSection title="Training Plan">
+          <SettingItem
+            title="Create Training Plan"
+            description="AI-powered running + gym plan for your race goal"
+            onPress={() => router.push("../training-plan" as any)}
+          />
+        </SettingSection>
+
+        <SettingSection title="Strava Integration">
+          <StravaConnect />
+        </SettingSection>
+
         <SettingSection title="Workout Preferences">
           <SettingItem
             title="Weight Unit"
