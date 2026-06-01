@@ -33,6 +33,24 @@
     "plugins": [
       "expo-router",
       [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "WorkoutDayWidget",
+              "label": "Workout Day",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal",
+              "updatePeriodMillis": 1800000,
+              "description": "Shows today's workout, run, or rest day"
+            }
+          ]
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
