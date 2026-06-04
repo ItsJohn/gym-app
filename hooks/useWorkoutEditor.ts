@@ -40,9 +40,9 @@ export function useWorkoutEditor() {
   const [generatedWorkouts, setGeneratedWorkouts] = useState<Workout[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [creationMode, setCreationMode] = useState<
-    "manual" | "ai" | "training-plan"
-  >(isEditing ? "manual" : "ai");
+  const [creationMode, setCreationMode] = useState<"manual" | "ai">(
+    isEditing ? "manual" : "ai",
+  );
   const [editMode, setEditMode] = useState<"single" | "program">("single");
   const { mutate: createExercise, isPending: isCreatingExercise } =
     useCreateExercise();

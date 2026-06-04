@@ -13,7 +13,6 @@ import {
   formatRestSound,
   formatTheme,
 } from "@/hooks/useSettingsActions";
-import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
@@ -42,14 +41,6 @@ export default function SettingsScreen() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <SettingSection title="Training Plan">
-          <SettingItem
-            title="Create Training Plan"
-            description="AI-powered running + gym plan for your race goal"
-            onPress={() => router.push("../training-plan" as any)}
-          />
-        </SettingSection>
-
         <SettingSection title="Strava Integration">
           <StravaConnect />
         </SettingSection>

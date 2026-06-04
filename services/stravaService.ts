@@ -3,6 +3,7 @@ import { SettingsService } from "@/database/services/settingsService";
 import {
   RunSessionService,
   StravaActivity,
+  StravaActivityDetail,
 } from "@/database/services/runSessionService";
 
 const CLIENT_ID = process.env.EXPO_PUBLIC_STRAVA_CLIENT_ID ?? "";
@@ -169,7 +170,21 @@ export class StravaService {
       );
 
       for (const run of runs) {
-        await RunSessionService.upsertFromStrava(run);
+        const sessionId = await RunSessionService.upsertFromStrava(run);
+        const alreadyFetched = await RunSessionService.hasSplits(sessionId);
+        if (!alreadyFetched) {
+          const detail = await this.fetchActivityDetail(run.id, token);
+          await RunSessionService.upsertSplits(
+            sessionId,
+            detail.splits_metric ?? [],
+          );
+          if (detail.suffer_score != null) {
+            await RunSessionService.updateSufferScore(
+              sessionId,
+              detail.suffer_score,
+            );
+          }
+        }
         imported++;
       }
 
@@ -182,6 +197,18 @@ export class StravaService {
       new Date().toISOString(),
     );
     return imported;
+  }
+
+  private static async fetchActivityDetail(
+    activityId: number,
+    token: string,
+  ): Promise<StravaActivityDetail> {
+    const response = await fetch(
+      `https://www.strava.com/api/v3/activities/${activityId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!response.ok) throw new Error(`Failed to fetch activity ${activityId}`);
+    return response.json();
   }
 
   // Returns true if a sync is needed (no pull in last 5 minutes)

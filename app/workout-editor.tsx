@@ -1,5 +1,4 @@
 import { router } from "expo-router";
-import { useEffect } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
 import GymLogo from "@/components/GymLogo";
@@ -33,13 +32,6 @@ export default function WorkoutEditorScreen() {
     aiInitialValues,
     previousProgram,
   } = useWorkoutEditor();
-
-  useEffect(() => {
-    if (creationMode === "training-plan") {
-      setCreationMode("ai");
-      router.push("../training-plan" as any);
-    }
-  }, [creationMode, setCreationMode]);
 
   if (isLoading) {
     return (
@@ -77,7 +69,6 @@ export default function WorkoutEditorScreen() {
           <AIWorkoutCreator
             onWorkoutProgramGenerated={handleAIWorkoutProgramGenerated}
             onCancel={() => setCreationMode("manual")}
-            onSuggestTrainingPlan={() => router.push("../training-plan" as any)}
             initialValues={aiInitialValues}
             previousProgram={previousProgram}
           />

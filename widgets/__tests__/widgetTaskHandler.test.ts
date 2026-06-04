@@ -4,12 +4,6 @@ jest.mock("@/database/database", () => ({
   initializeDatabase: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@/database/services/trainingPlanService", () => ({
-  TrainingPlanService: {
-    getTodaysPlanDay: jest.fn(),
-  },
-}));
-
 jest.mock("@/database/services/workoutScheduleService", () => ({
   WorkoutScheduleService: {
     getTodaysWorkout: jest.fn(),
@@ -18,7 +12,6 @@ jest.mock("@/database/services/workoutScheduleService", () => ({
 
 jest.mock("react-native-android-widget", () => ({}));
 
-import { TrainingPlanService } from "@/database/services/trainingPlanService";
 import { WorkoutScheduleService } from "@/database/services/workoutScheduleService";
 
 describe("widgetTaskHandler", () => {
@@ -26,7 +19,6 @@ describe("widgetTaskHandler", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (TrainingPlanService.getTodaysPlanDay as jest.Mock).mockResolvedValue(null);
     (WorkoutScheduleService.getTodaysWorkout as jest.Mock).mockResolvedValue(
       null,
     );

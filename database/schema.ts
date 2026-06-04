@@ -29,47 +29,6 @@ export const CREATE_WORKOUTS_TABLE = `
   );
 `;
 
-export const CREATE_TRAINING_PLANS_TABLE = `
-  CREATE TABLE IF NOT EXISTS training_plans (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    goal_text TEXT NOT NULL,
-    goal_date TEXT,
-    total_weeks INTEGER NOT NULL,
-    is_active BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`;
-
-export const CREATE_TRAINING_PLAN_DAYS_TABLE = `
-  CREATE TABLE IF NOT EXISTS training_plan_days (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    plan_id INTEGER NOT NULL,
-    week_number INTEGER NOT NULL,
-    day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
-    day_type TEXT NOT NULL CHECK (day_type IN ('run', 'gym', 'rest')),
-    workout_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (plan_id) REFERENCES training_plans (id) ON DELETE CASCADE,
-    FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE SET NULL
-  );
-`;
-
-export const CREATE_RUN_TARGETS_TABLE = `
-  CREATE TABLE IF NOT EXISTS run_targets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    plan_day_id INTEGER NOT NULL,
-    run_type TEXT NOT NULL CHECK (run_type IN ('easy', 'tempo', 'intervals', 'long', 'race')),
-    distance_km REAL NOT NULL,
-    pace_note TEXT,
-    duration_minutes INTEGER,
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (plan_day_id) REFERENCES training_plan_days (id) ON DELETE CASCADE
-  );
-`;
-
 export const CREATE_RUN_SESSIONS_TABLE = `
   CREATE TABLE IF NOT EXISTS run_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,8 +39,32 @@ export const CREATE_RUN_SESSIONS_TABLE = `
     avg_pace_secs_per_km REAL,
     avg_hr INTEGER,
     max_hr INTEGER,
+    total_elevation_gain REAL,
+    elev_high REAL,
+    elev_low REAL,
+    avg_cadence REAL,
+    suffer_score INTEGER,
+    splits_fetched BOOLEAN DEFAULT 0,
     started_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+
+export const CREATE_RUN_SPLITS_TABLE = `
+  CREATE TABLE IF NOT EXISTS run_splits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_session_id INTEGER NOT NULL,
+    split_number INTEGER NOT NULL,
+    distance_m REAL NOT NULL,
+    moving_time_secs INTEGER NOT NULL,
+    elapsed_time_secs INTEGER NOT NULL,
+    elevation_diff_m REAL,
+    avg_pace_secs_per_km REAL,
+    avg_hr REAL,
+    avg_cadence REAL,
+    pace_zone INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (run_session_id) REFERENCES run_sessions (id) ON DELETE CASCADE
   );
 `;
 
@@ -91,6 +74,12 @@ export const MIGRATIONS = [
   "ALTER TABLE workouts ADD COLUMN ai_experience TEXT;",
   "ALTER TABLE workouts ADD COLUMN ai_time_available INTEGER;",
   "ALTER TABLE workouts ADD COLUMN ai_training_days INTEGER;",
+  "ALTER TABLE run_sessions ADD COLUMN total_elevation_gain REAL;",
+  "ALTER TABLE run_sessions ADD COLUMN elev_high REAL;",
+  "ALTER TABLE run_sessions ADD COLUMN elev_low REAL;",
+  "ALTER TABLE run_sessions ADD COLUMN avg_cadence REAL;",
+  "ALTER TABLE run_sessions ADD COLUMN suffer_score INTEGER;",
+  "ALTER TABLE run_sessions ADD COLUMN splits_fetched BOOLEAN DEFAULT 0;",
 ];
 
 export const CREATE_EXERCISES_TABLE = `
@@ -165,6 +154,8 @@ export const CREATE_INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_workout_schedules_active ON workout_schedules (is_active);",
   "CREATE INDEX IF NOT EXISTS idx_workout_sessions_completed_at ON workout_sessions (completed_at);",
   "CREATE INDEX IF NOT EXISTS idx_session_set_created_at ON session_set (created_at);",
+  "CREATE INDEX IF NOT EXISTS idx_run_splits_session_id ON run_splits (run_session_id);",
+  "CREATE INDEX IF NOT EXISTS idx_run_sessions_started_at ON run_sessions (started_at);",
 ];
 
 export const ALL_TABLES = [
@@ -174,9 +165,7 @@ export const ALL_TABLES = [
   CREATE_WORKOUT_SESSIONS_TABLE,
   CREATE_EXERCISE_SETS_TABLE,
   CREATE_WORKOUT_SCHEDULES_TABLE,
-  CREATE_TRAINING_PLANS_TABLE,
-  CREATE_TRAINING_PLAN_DAYS_TABLE,
-  CREATE_RUN_TARGETS_TABLE,
   CREATE_RUN_SESSIONS_TABLE,
+  CREATE_RUN_SPLITS_TABLE,
   ...CREATE_INDEXES,
 ];

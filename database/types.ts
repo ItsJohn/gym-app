@@ -97,42 +97,6 @@ export interface WorkoutSessionWithDetails extends WorkoutSession {
   exercise_sets: (ExerciseSet & { exercise: Exercise })[];
 }
 
-// Training plan types
-export type DayType = "run" | "gym" | "rest";
-export type RunType = "easy" | "tempo" | "intervals" | "long" | "race";
-
-export interface TrainingPlan {
-  id: number;
-  name: string;
-  goal_text: string;
-  goal_date?: string;
-  total_weeks: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TrainingPlanDay {
-  id: number;
-  plan_id: number;
-  week_number: number;
-  day_of_week: number;
-  day_type: DayType;
-  workout_id?: number;
-  created_at: string;
-}
-
-export interface RunTarget {
-  id: number;
-  plan_day_id: number;
-  run_type: RunType;
-  distance_km: number;
-  pace_note?: string;
-  duration_minutes?: number;
-  notes?: string;
-  created_at: string;
-}
-
 export interface RunSession {
   id: number;
   strava_id: string;
@@ -142,18 +106,29 @@ export interface RunSession {
   avg_pace_secs_per_km?: number;
   avg_hr?: number;
   max_hr?: number;
+  total_elevation_gain?: number;
+  elev_high?: number;
+  elev_low?: number;
+  avg_cadence?: number;
+  suffer_score?: number;
+  splits_fetched: boolean;
   started_at: string;
   created_at: string;
 }
 
-export interface TrainingPlanDayWithDetails extends TrainingPlanDay {
-  run_target?: RunTarget;
-  workout_title?: string;
-}
-
-export interface ActivePlanDay {
-  plan: TrainingPlan;
-  day: TrainingPlanDayWithDetails;
+export interface RunSplit {
+  id: number;
+  run_session_id: number;
+  split_number: number;
+  distance_m: number;
+  moving_time_secs: number;
+  elapsed_time_secs: number;
+  elevation_diff_m?: number;
+  avg_pace_secs_per_km?: number;
+  avg_hr?: number;
+  avg_cadence?: number;
+  pace_zone?: number;
+  created_at: string;
 }
 
 export const DAYS_OF_WEEK = [

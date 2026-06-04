@@ -1,10 +1,10 @@
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
 interface ToggleCreationTypeProps {
-  creationMode: "ai" | "manual" | "training-plan";
-  setCreationMode: (mode: "ai" | "manual" | "training-plan") => void;
+  creationMode: "ai" | "manual";
+  setCreationMode: (mode: "ai" | "manual") => void;
 }
 
 export const ToggleCreationType = ({
@@ -47,22 +47,6 @@ export const ToggleCreationType = ({
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
-      <TouchableOpacity
-        style={[
-          styles.trainingPlanButton,
-          creationMode === "training-plan" && styles.trainingPlanButtonActive,
-        ]}
-        onPress={() => setCreationMode("training-plan")}
-      >
-        <ThemedText
-          style={[
-            styles.trainingPlanText,
-            creationMode === "training-plan" && styles.trainingPlanTextActive,
-          ]}
-        >
-          🗓️ Training Plan (Running + Gym)
-        </ThemedText>
-      </TouchableOpacity>
     </ThemedView>
   );
 };
@@ -93,27 +77,6 @@ const styles = StyleSheet.create({
     color: "rgba(74, 144, 226, 1)",
   },
   modeButtonTextActive: {
-    color: "white",
-  },
-  trainingPlanButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    backgroundColor: "rgba(255, 107, 53, 0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 107, 53, 0.3)",
-  },
-  trainingPlanButtonActive: {
-    backgroundColor: "rgba(255, 107, 53, 1)",
-    borderColor: "rgba(255, 107, 53, 1)",
-  },
-  trainingPlanText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "rgba(255, 107, 53, 1)",
-  },
-  trainingPlanTextActive: {
     color: "white",
   },
 });

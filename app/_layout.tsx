@@ -117,10 +117,6 @@ export default function RootLayout() {
                 name="workout-preview"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen
-                name="training-plan"
-                options={{ headerShown: false }}
-              />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="auto" />

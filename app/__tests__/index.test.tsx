@@ -44,15 +44,6 @@ jest.mock("@/components/landing/EmptyState", () => ({
   EmptyState: () => <div data-testid="empty-state" />,
 }));
 
-jest.mock("@/components/home/TodaysRunButton", () => () => (
-  <div data-testid="todays-run" />
-));
-jest.mock("@/components/home/RestDayCard", () => () => (
-  <div data-testid="rest-day" />
-));
-jest.mock("@/hooks/useTrainingPlan", () => ({
-  useTodaysPlanDay: () => ({ data: null, isLoading: false }),
-}));
 jest.mock("@/hooks/useStravaSync", () => ({
   useStravaSync: () => ({ syncing: false, lastSyncCount: null, error: null }),
 }));
