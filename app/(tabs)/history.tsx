@@ -9,13 +9,8 @@ import { ThemedView } from "@/components/ThemedView";
 import { useHistoryData } from "@/hooks/useHistoryData";
 
 export default function HistoryScreen() {
-  const {
-    stats,
-    allActiveWorkoutSessions,
-    isLoading,
-    error,
-    handleSessionPress,
-  } = useHistoryData();
+  const { stats, feed, isLoading, error, handleSessionPress, handleRunPress } =
+    useHistoryData();
 
   if (isLoading) {
     return (
@@ -53,15 +48,16 @@ export default function HistoryScreen() {
     >
       <ThemedView style={styles.container}>
         <ThemedView style={styles.header}>
-          <ThemedText type="title">Active Workouts History</ThemedText>
+          <ThemedText type="title">History</ThemedText>
         </ThemedView>
 
         <StatsSection stats={stats} />
 
         <SessionsSection
-          sessions={allActiveWorkoutSessions || []}
+          items={feed}
           totalWorkouts={stats.totalWorkouts}
           onSessionPress={handleSessionPress}
+          onRunPress={handleRunPress}
         />
       </ThemedView>
     </ParallaxScrollView>

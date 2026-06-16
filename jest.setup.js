@@ -15,6 +15,29 @@ jest.mock('expo-web-browser', () => ({
   openBrowserAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
 }));
 
+// Mock react-native (only the bits used in unit tests). Default OS is non-android
+// so notification side effects are no-ops unless a test overrides it.
+jest.mock('react-native', () => ({
+  Platform: { OS: 'web', select: (obj) => obj.web ?? obj.default },
+}));
+
+// Mock Notifee native module
+jest.mock('@notifee/react-native', () => ({
+  __esModule: true,
+  default: {
+    createChannel: jest.fn().mockResolvedValue('rest-timer'),
+    displayNotification: jest.fn().mockResolvedValue(undefined),
+    createTriggerNotification: jest.fn().mockResolvedValue('rest-timer-done'),
+    cancelNotification: jest.fn().mockResolvedValue(undefined),
+    requestPermission: jest.fn().mockResolvedValue({ authorizationStatus: 1 }),
+  },
+  AndroidImportance: { LOW: 2, HIGH: 4 },
+  AndroidVisibility: { PUBLIC: 1 },
+  AuthorizationStatus: { DENIED: 0, AUTHORIZED: 1 },
+  TriggerType: { TIMESTAMP: 0 },
+  AlarmType: { SET_AND_ALLOW_WHILE_IDLE: 1 },
+}));
+
 // Mock console methods to reduce noise in tests
 global.console = {
   ...console,

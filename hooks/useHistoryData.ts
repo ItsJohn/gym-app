@@ -1,11 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { useCallback } from "react";
+import { Href, router } from "expo-router";
+import { useCallback, useMemo } from "react";
 
 import { SessionService } from "@/database/services/sessionService";
+import { RunSession } from "@/database/types";
 import { useLatestWorkoutStats } from "@/hooks";
+import { useRecentRuns } from "@/hooks/useRunDetail";
 import { sessionKeys } from "@/hooks/service/session";
 import { Session } from "@/validation/session";
+
+interface SessionWithTitle extends Session {
+  workout_title?: string;
+}
+
+export type HistoryFeedItem =
+  | { kind: "workout"; date: string; session: SessionWithTitle }
+  | { kind: "run"; date: string; run: RunSession };
 
 export function useHistoryData() {
   const { data: workoutStats, isLoading: isStatsLoading } =
@@ -20,6 +30,26 @@ export function useHistoryData() {
     queryFn: () => SessionService.getAllSessions(),
     staleTime: 2 * 60 * 1000,
   });
+
+  const { data: runs, isLoading: isRunsLoading } = useRecentRuns();
+
+  const feed = useMemo<HistoryFeedItem[]>(() => {
+    const workoutItems: HistoryFeedItem[] = (
+      allActiveWorkoutSessions ?? []
+    ).map((session) => ({
+      kind: "workout",
+      date: session.started_at ?? "",
+      session,
+    }));
+    const runItems: HistoryFeedItem[] = (runs ?? []).map((run) => ({
+      kind: "run",
+      date: run.started_at,
+      run,
+    }));
+    return [...workoutItems, ...runItems].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+  }, [allActiveWorkoutSessions, runs]);
 
   const stats = {
     totalSessions: workoutStats?.total_sessions || 0,
@@ -37,7 +67,7 @@ export function useHistoryData() {
     completionRate: workoutStats?.completion_rate || 0,
   };
 
-  const handleSessionPress = useCallback(async (session: Session) => {
+  const handleSessionPress = useCallback((session: Session) => {
     router.push({
       pathname: "/workout",
       params: {
@@ -47,13 +77,18 @@ export function useHistoryData() {
     });
   }, []);
 
-  const isLoading = isStatsLoading || isSessionsLoading;
+  const handleRunPress = useCallback((run: RunSession) => {
+    router.push(`/run/${run.id}` as Href);
+  }, []);
+
+  const isLoading = isStatsLoading || isSessionsLoading || isRunsLoading;
 
   return {
     stats,
-    allActiveWorkoutSessions,
+    feed,
     isLoading,
     error,
     handleSessionPress,
+    handleRunPress,
   };
 }

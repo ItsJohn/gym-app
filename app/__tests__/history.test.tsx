@@ -32,9 +32,10 @@ describe("HistoryScreen", () => {
   it("shows loading state", () => {
     mockUseHistoryData.mockReturnValue({
       stats: {},
-      allActiveWorkoutSessions: [],
+      feed: [],
       isLoading: true,
       handleSessionPress: jest.fn(),
+      handleRunPress: jest.fn(),
     });
 
     render(<HistoryScreen />);
@@ -44,13 +45,14 @@ describe("HistoryScreen", () => {
   it("renders history content when loaded", () => {
     mockUseHistoryData.mockReturnValue({
       stats: { totalWorkouts: 2 },
-      allActiveWorkoutSessions: [],
+      feed: [],
       isLoading: false,
       handleSessionPress: jest.fn(),
+      handleRunPress: jest.fn(),
     });
 
     render(<HistoryScreen />);
-    expect(screen.getByText("Active Workouts History")).toBeDefined();
+    expect(screen.getByText("History")).toBeDefined();
     expect(screen.getByTestId("stats-section")).toBeDefined();
     expect(screen.getByTestId("sessions-section")).toBeDefined();
   });

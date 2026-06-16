@@ -16,6 +16,10 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { WorkoutTimerProvider } from "@/contexts/WorkoutTimerContext";
 import { initializeDatabase } from "@/database/database";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import {
+  initRestTimerNotifications,
+  requestRestTimerPermission,
+} from "@/services/restTimerNotification";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +54,11 @@ export default function RootLayout() {
     };
 
     initDb();
+  }, []);
+
+  useEffect(() => {
+    initRestTimerNotifications().catch(() => {});
+    requestRestTimerPermission().catch(() => {});
   }, []);
 
   if (!loaded) {
@@ -109,6 +118,7 @@ export default function RootLayout() {
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="workout" options={{ headerShown: false }} />
+              <Stack.Screen name="run/[id]" options={{ headerShown: false }} />
               <Stack.Screen
                 name="workout-editor"
                 options={{ headerShown: false }}

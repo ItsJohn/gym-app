@@ -2,26 +2,27 @@ import { StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { RunSession } from "@/database/types";
+import { HistoryFeedItem } from "@/hooks/useHistoryData";
 import { Session } from "@/validation/session";
 import { EmptyState } from "./EmptyState";
+import { RunSessionCard } from "./RunSessionCard";
 import { SessionCard } from "./SessionCard";
 
-interface SessionWithTitle extends Session {
-  workout_title?: string;
-}
-
 interface SessionsSectionProps {
-  sessions: SessionWithTitle[];
+  items: HistoryFeedItem[];
   totalWorkouts: number;
-  onSessionPress: (session: SessionWithTitle) => void;
+  onSessionPress: (session: Session) => void;
+  onRunPress: (run: RunSession) => void;
 }
 
 export function SessionsSection({
-  sessions,
+  items,
   totalWorkouts,
   onSessionPress,
+  onRunPress,
 }: SessionsSectionProps) {
-  if (totalWorkouts === 0 || sessions.length === 0) {
+  if (items.length === 0) {
     return <EmptyState hasWorkout={totalWorkouts === 0} />;
   }
 
@@ -31,13 +32,21 @@ export function SessionsSection({
         Recent Sessions
       </ThemedText>
       <ThemedView style={styles.sessionsList}>
-        {sessions.map((session) => (
-          <SessionCard
-            key={session.id}
-            session={session}
-            onPress={() => onSessionPress(session)}
-          />
-        ))}
+        {items.map((item) =>
+          item.kind === "run" ? (
+            <RunSessionCard
+              key={`run-${item.run.id}`}
+              run={item.run}
+              onPress={() => onRunPress(item.run)}
+            />
+          ) : (
+            <SessionCard
+              key={`session-${item.session.id}`}
+              session={item.session}
+              onPress={() => onSessionPress(item.session)}
+            />
+          ),
+        )}
       </ThemedView>
     </ThemedView>
   );

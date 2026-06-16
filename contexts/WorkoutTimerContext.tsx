@@ -7,6 +7,11 @@ import React, {
   useState,
 } from "react";
 
+import {
+  cancelRestTimerNotification,
+  showRestTimerNotification,
+} from "@/services/restTimerNotification";
+
 interface TimerState {
   timeRemaining: number;
   isActive: boolean;
@@ -34,32 +39,51 @@ export function WorkoutTimerProvider({
 }) {
   const [timers, setTimers] = useState<Map<string, TimerState>>(new Map());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Which timer currently owns the ongoing Android countdown notification.
+  const notifiedTimerIdRef = useRef<string | null>(null);
+
+  const clearNotification = useCallback((timerId: string) => {
+    if (notifiedTimerIdRef.current !== timerId) return;
+    notifiedTimerIdRef.current = null;
+    void cancelRestTimerNotification();
+  }, []);
 
   const startTimer = useCallback((timerId: string, duration: number) => {
+    const startTime = Date.now();
     setTimers((prev) => {
       const newTimers = new Map(prev);
       newTimers.set(timerId, {
         timeRemaining: duration,
         isActive: true,
-        startTime: Date.now(),
+        startTime,
         duration,
       });
       return newTimers;
     });
+
+    notifiedTimerIdRef.current = timerId;
+    void showRestTimerNotification(
+      startTime + duration * 1000,
+      "Resting between sets",
+    );
   }, []);
 
-  const stopTimer = useCallback((timerId: string) => {
-    setTimers((prev) => {
-      const newTimers = new Map(prev);
-      newTimers.set(timerId, {
-        timeRemaining: 0,
-        isActive: false,
-        startTime: null,
-        duration: 0,
+  const stopTimer = useCallback(
+    (timerId: string) => {
+      setTimers((prev) => {
+        const newTimers = new Map(prev);
+        newTimers.set(timerId, {
+          timeRemaining: 0,
+          isActive: false,
+          startTime: null,
+          duration: 0,
+        });
+        return newTimers;
       });
-      return newTimers;
-    });
-  }, []);
+      clearNotification(timerId);
+    },
+    [clearNotification],
+  );
 
   const skipTimer = useCallback(
     (timerId: string) => {
@@ -89,6 +113,7 @@ export function WorkoutTimerProvider({
 
     if (hasActiveTimers) {
       intervalRef.current = setInterval(() => {
+        const finishedTimerIds: string[] = [];
         setTimers((prev) => {
           const newTimers = new Map(prev);
           let hasAnyActive = false;
@@ -102,6 +127,7 @@ export function WorkoutTimerProvider({
 
               if (remaining <= 0) {
                 // Timer finished
+                finishedTimerIds.push(timerId);
                 newTimers.set(timerId, {
                   timeRemaining: 0,
                   isActive: false,
@@ -121,6 +147,8 @@ export function WorkoutTimerProvider({
 
           return newTimers;
         });
+
+        finishedTimerIds.forEach(clearNotification);
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -134,7 +162,7 @@ export function WorkoutTimerProvider({
         clearInterval(intervalRef.current);
       }
     };
-  }, [timers]);
+  }, [timers, clearNotification]);
 
   return (
     <WorkoutTimerContext.Provider

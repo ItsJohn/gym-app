@@ -191,4 +191,13 @@ export class RunSessionService {
   static formatDistance(distanceM: number): string {
     return `${(distanceM / 1000).toFixed(2)} km`;
   }
+
+  static formatDuration(durationSecs: number): string {
+    const hours = Math.floor(durationSecs / 3600);
+    const mins = Math.floor((durationSecs % 3600) / 60);
+    const secs = Math.round(durationSecs % 60);
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    if (hours > 0) return `${hours}:${pad(mins)}:${pad(secs)}`;
+    return `${mins}:${pad(secs)}`;
+  }
 }
