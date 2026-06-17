@@ -1,15 +1,14 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { SessionService } from "@/database/services/sessionService";
-import { DAYS_OF_WEEK, DayOfWeek } from "@/database/types";
-import { useWorkouts } from "@/hooks";
-import { Workout } from "@/validation/schemas";
+import { WorkoutScheduleService } from "@/database/services/workoutScheduleService";
+import { DAYS_OF_WEEK, WorkoutWithExercises } from "@/database/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface UserSchedule {
-  workout?: Workout;
+  workout?: WorkoutWithExercises;
   dayName: string;
   date: string;
   isCompleted?: boolean;
@@ -23,27 +22,20 @@ export default function SchedulePreview({
   onViewAllPress,
 }: SchedulePreviewProps) {
   const [schedule, setSchedule] = useState<UserSchedule[] | null>(null);
-  const { data: workouts, isLoading: isWorkoutsLoading } = useWorkouts();
 
   const loadWeekSchedule = useCallback(async () => {
     try {
-      let date = new Date();
+      const weeklySchedule = await WorkoutScheduleService.getWeeklySchedule();
+      const byDayIndex = weeklySchedule as Record<number, WorkoutWithExercises>;
+      const todayIndex = new Date().getDay();
       const scheduleItems: UserSchedule[] = [];
 
-      const workoutDays = workouts?.reduce(
-        (acc, workout) => ({
-          ...acc,
-          [workout.day_of_week as DayOfWeek]: workout,
-        }),
-        {} as Record<DayOfWeek, Workout>,
-      );
+      for (let offset = 0; offset < 3; offset++) {
+        const dayIndex = (todayIndex + offset) % 7;
+        const day = DAYS_OF_WEEK[dayIndex];
 
-      const dayNumber = date.getDay();
-
-      for (let i = dayNumber; i < dayNumber + 3; i++) {
-        const day = DAYS_OF_WEEK[i % 7];
-
-        date.setDate(date.getDate() + (i - dayNumber));
+        const date = new Date();
+        date.setDate(date.getDate() + offset);
 
         const formattedDate = date
           .toLocaleDateString("en-IE", {
@@ -52,66 +44,55 @@ export default function SchedulePreview({
           })
           .replace(" ", "-");
 
-        if (workoutDays && workoutDays[day]) {
-          // Check if workout is completed for today
-          let isCompleted = false;
-          if (i === dayNumber) {
-            // Only check completion for today
-            try {
-              const sessions = await SessionService.getSessionsByWorkoutId(
-                workoutDays[day].id!,
+        const workout = byDayIndex[dayIndex];
+
+        // Only check completion for today
+        let isCompleted: boolean | undefined = workout ? false : undefined;
+        if (workout && offset === 0) {
+          try {
+            const sessions = await SessionService.getSessionsByWorkoutId(
+              workout.id!,
+            );
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayEnd = new Date();
+            todayEnd.setHours(23, 59, 59, 999);
+
+            isCompleted = sessions.some((session) => {
+              if (!session.started_at) return false;
+              const sessionDate = new Date(session.started_at);
+              return (
+                session.is_completed &&
+                sessionDate >= todayStart &&
+                sessionDate <= todayEnd
               );
-              const todayStart = new Date();
-              todayStart.setHours(0, 0, 0, 0);
-              const todayEnd = new Date();
-              todayEnd.setHours(23, 59, 59, 999);
-
-              isCompleted = sessions.some((session) => {
-                if (!session.started_at) return false;
-                const sessionDate = new Date(session.started_at);
-                return (
-                  session.is_completed &&
-                  sessionDate >= todayStart &&
-                  sessionDate <= todayEnd
-                );
-              });
-            } catch (sessionError) {
-              console.error("Error checking session completion:", sessionError);
-            }
+            });
+          } catch (sessionError) {
+            console.error("Error checking session completion:", sessionError);
           }
-
-          scheduleItems.push({
-            workout: workoutDays[day],
-            dayName: day,
-            date: formattedDate,
-            isCompleted,
-          });
-        } else {
-          scheduleItems.push({
-            workout: undefined,
-            dayName: day,
-            date: formattedDate,
-            isCompleted: undefined,
-          });
         }
+
+        scheduleItems.push({
+          workout,
+          dayName: day,
+          date: formattedDate,
+          isCompleted,
+        });
       }
 
-      // Filter out null values and set the schedule
       setSchedule(scheduleItems);
     } catch (error) {
       console.error("Error loading week schedule:", error);
       // Set empty schedule on error
       setSchedule([]);
     }
-  }, [workouts]);
+  }, []);
 
   useEffect(() => {
-    if (workouts && !schedule) {
-      loadWeekSchedule();
-    }
-  }, [loadWeekSchedule, workouts, schedule]);
+    loadWeekSchedule();
+  }, [loadWeekSchedule]);
 
-  if (isWorkoutsLoading || schedule === null) {
+  if (schedule === null) {
     return (
       <ThemedView style={styles.scheduleSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
