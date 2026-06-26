@@ -26,7 +26,7 @@ export function WeightProgressionChart({
   variant = "default",
   weightUnit = "kg",
 }: WeightProgressionChartProps) {
-  const colorScheme = useColorScheme() ?? "light";
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light";
   const font = useFont(spaceMono, 12);
   const isOnBlue = variant === "onBlue";
 
