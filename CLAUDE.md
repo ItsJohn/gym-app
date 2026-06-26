@@ -172,7 +172,7 @@ EXPO_PUBLIC_GEMINI_API_KEY=your_key_here
 ## CI/CD
 
 GitHub Actions (`.github/workflows/github-ci.yml`) runs on push:
-1. Jest tests (Node.js 22.9.0, `yarn test`)
+1. Jest tests (Node.js 22.14.0, `yarn test`)
 2. Android preview build via EAS (on main branch only)
 
 ## Known Patterns
