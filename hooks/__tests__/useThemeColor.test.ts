@@ -188,7 +188,7 @@ describe("useThemeColor", () => {
 
   describe("edge cases", () => {
     it("should handle null color scheme by defaulting to light", () => {
-      mockUseColorScheme.mockReturnValue(null);
+      mockUseColorScheme.mockReturnValue(null as never);
 
       const { result } = renderHook(() => useThemeColor({}, "text"));
 
@@ -196,7 +196,7 @@ describe("useThemeColor", () => {
     });
 
     it("should handle undefined color scheme by defaulting to light", () => {
-      mockUseColorScheme.mockReturnValue(undefined);
+      mockUseColorScheme.mockReturnValue(undefined as never);
 
       const { result } = renderHook(() => useThemeColor({}, "text"));
 
