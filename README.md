@@ -57,7 +57,7 @@ The app features an intuitive interface for tracking workouts, managing exercise
 
 ### Prerequisites
 
-- Node.js v22.14.0 (see `.nvmrc`)
+- Node.js v24.18.0 (see `.nvmrc`)
 - npm or yarn package manager
 - Expo CLI (`npm install -g @expo/cli`)
 - iOS Simulator (for iOS development) or Android Studio (for Android development)
