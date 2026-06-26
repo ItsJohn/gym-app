@@ -20,7 +20,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
 
 export default function AnalyticsScreen() {
-  const colorScheme = useColorScheme() ?? "light";
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light";
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>("");
   const [frequencyPeriod, setFrequencyPeriod] = useState<"week" | "month">(
     "week",
