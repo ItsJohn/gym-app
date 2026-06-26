@@ -24,7 +24,7 @@ export function WorkoutFrequencyChart({
   period,
   onPeriodChange,
 }: WorkoutFrequencyChartProps) {
-  const colorScheme = useColorScheme() ?? "light";
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light";
   const font = useFont(spaceMono, 12);
 
   if (isLoading || !font) {

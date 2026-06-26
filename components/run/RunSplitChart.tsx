@@ -29,7 +29,7 @@ export function RunSplitChart({
   type,
   color,
 }: RunSplitChartProps) {
-  const colorScheme = useColorScheme() ?? "light";
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light";
   const font = useFont(spaceMono, 11);
 
   if (!font || data.length === 0) {
