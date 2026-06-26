@@ -14,7 +14,7 @@ module.exports = {
   clearMocks: true,
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
+      tsconfig: 'tsconfig.jest.json',
     }],
   },
   moduleNameMapper: {
