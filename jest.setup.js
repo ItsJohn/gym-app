@@ -21,21 +21,17 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'web', select: (obj) => obj.web ?? obj.default },
 }));
 
-// Mock Notifee native module
-jest.mock('@notifee/react-native', () => ({
-  __esModule: true,
-  default: {
-    createChannel: jest.fn().mockResolvedValue('rest-timer'),
-    displayNotification: jest.fn().mockResolvedValue(undefined),
-    createTriggerNotification: jest.fn().mockResolvedValue('rest-timer-done'),
-    cancelNotification: jest.fn().mockResolvedValue(undefined),
-    requestPermission: jest.fn().mockResolvedValue({ authorizationStatus: 1 }),
-  },
+// Mock expo-notifications native module
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn().mockResolvedValue(undefined),
+  requestPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+  scheduleNotificationAsync: jest.fn().mockResolvedValue('notification-id'),
+  cancelScheduledNotificationAsync: jest.fn().mockResolvedValue(undefined),
+  dismissNotificationAsync: jest.fn().mockResolvedValue(undefined),
   AndroidImportance: { LOW: 2, HIGH: 4 },
-  AndroidVisibility: { PUBLIC: 1 },
-  AuthorizationStatus: { DENIED: 0, AUTHORIZED: 1 },
-  TriggerType: { TIMESTAMP: 0 },
-  AlarmType: { SET_AND_ALLOW_WHILE_IDLE: 1 },
+  AndroidNotificationVisibility: { PUBLIC: 1 },
+  SchedulableTriggerInputTypes: { DATE: 'date' },
 }));
 
 // Mock console methods to reduce noise in tests

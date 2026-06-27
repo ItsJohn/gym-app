@@ -313,4 +313,55 @@ describe("WorkoutScheduleService", () => {
       expect(result).toHaveLength(0);
     });
   });
+
+  describe("syncWorkoutDay", () => {
+    it("mirrors a workout's day name into workout_schedules as a 0-6 index", async () => {
+      mockGetFirstRow.mockResolvedValue(null);
+
+      await WorkoutScheduleService.syncWorkoutDay(7, "Monday");
+
+      expect(mockExecuteQuery).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO workout_schedules"),
+        [1, 7],
+      );
+    });
+
+    it("clears the workout's existing day when name is missing or invalid", async () => {
+      await WorkoutScheduleService.syncWorkoutDay(7, "Funday");
+      await WorkoutScheduleService.syncWorkoutDay(7, null);
+
+      // Only the deactivate-by-workout query runs; no new schedule is inserted
+      expect(mockExecuteQuery).toHaveBeenCalledWith(
+        "UPDATE workout_schedules SET is_active = 0 WHERE workout_id = ?",
+        [7],
+      );
+      expect(mockExecuteQuery).not.toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO workout_schedules"),
+        expect.anything(),
+      );
+    });
+  });
+
+  describe("backfillFromWorkoutDays", () => {
+    it("schedules active workouts by day, skipping days already taken", async () => {
+      (WorkoutService.getActiveWorkouts as jest.Mock).mockResolvedValue([
+        { id: 10, day_of_week: "Monday" }, // index 1, already taken -> skip
+        { id: 11, day_of_week: "Wednesday" }, // index 3 -> insert
+        { id: 12, day_of_week: "Wednesday" }, // duplicate day -> skip
+      ]);
+      mockGetAllRows.mockResolvedValue([{ day_of_week: 1 }]);
+      mockGetFirstRow.mockResolvedValue(null);
+
+      await WorkoutScheduleService.backfillFromWorkoutDays();
+
+      expect(mockExecuteQuery).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO workout_schedules"),
+        [3, 11],
+      );
+      expect(mockExecuteQuery).not.toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO workout_schedules"),
+        [1, 10],
+      );
+    });
+  });
 });

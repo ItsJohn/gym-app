@@ -130,6 +130,53 @@ export class WorkoutScheduleService {
     return weeklySchedule;
   }
 
+  // Convert a stored day name ("Monday") to a 0-6 index, or null if invalid
+  static dayNameToIndex(dayName?: string | null): number | null {
+    if (!dayName) return null;
+    const index = DAYS_OF_WEEK.findIndex(
+      (d) => d.toLowerCase() === dayName.trim().toLowerCase(),
+    );
+    return index === -1 ? null : index;
+  }
+
+  // Mirror a workout's day_of_week name into the workout_schedules table.
+  // Clears any prior day for this workout first so a workout maps to one day
+  // (or none, when the name is missing/invalid — i.e. a rest day).
+  static async syncWorkoutDay(
+    workoutId: number,
+    dayName?: string | null,
+  ): Promise<void> {
+    await executeQuery(
+      "UPDATE workout_schedules SET is_active = 0 WHERE workout_id = ?",
+      [workoutId],
+    );
+    const index = this.dayNameToIndex(dayName);
+    if (index === null) return;
+    await this.setWorkoutForDayOfWeek(index as unknown as DayOfWeek, workoutId);
+  }
+
+  // Backfill workout_schedules from active workouts' day_of_week names.
+  // Skips days already assigned so manual scheduling is never clobbered.
+  static async backfillFromWorkoutDays(): Promise<void> {
+    const workouts = await WorkoutService.getActiveWorkouts();
+    const existing = await getAllRows<{ day_of_week: number }>(
+      "SELECT day_of_week FROM workout_schedules WHERE is_active = 1",
+    );
+    const taken = new Set(existing.map((e) => Number(e.day_of_week)));
+
+    for (const workout of workouts) {
+      const index = this.dayNameToIndex(workout.day_of_week);
+      if (index === null || taken.has(index) || workout.id == null) {
+        continue;
+      }
+      await this.setWorkoutForDayOfWeek(
+        index as unknown as DayOfWeek,
+        workout.id,
+      );
+      taken.add(index);
+    }
+  }
+
   static async initializeDefault3DaySchedule(): Promise<void> {
     const workouts = await WorkoutService.getAllWorkouts();
 

@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
+import { DAYS_OF_WEEK, DAYS_OF_WEEK_SHORT } from "@/database/types";
 import { Exercise, Workout } from "@/validation/schemas";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -34,6 +35,10 @@ export function WorkoutForm({
 
   const handleDescriptionChange = (description: string) => {
     onWorkoutChange({ ...workout, description });
+  };
+
+  const handleDayChange = (day: string | null) => {
+    onWorkoutChange({ ...workout, day_of_week: day });
   };
 
   const handleAddExercise = () => {
@@ -229,6 +234,52 @@ export function WorkoutForm({
         />
       </ThemedView>
 
+      <ThemedView style={styles.inputGroup}>
+        <ThemedText style={styles.label}>Scheduled Day</ThemedText>
+        <ThemedView style={styles.dayRow}>
+          <TouchableOpacity
+            style={[
+              styles.dayChip,
+              { borderColor: textInputBorderColor },
+              !workout.day_of_week && styles.dayChipSelected,
+            ]}
+            onPress={() => handleDayChange(null)}
+          >
+            <ThemedText
+              style={[
+                styles.dayChipText,
+                !workout.day_of_week && styles.dayChipTextSelected,
+              ]}
+            >
+              Rest
+            </ThemedText>
+          </TouchableOpacity>
+          {DAYS_OF_WEEK.map((day, index) => {
+            const selected = workout.day_of_week === day;
+            return (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayChip,
+                  { borderColor: textInputBorderColor },
+                  selected && styles.dayChipSelected,
+                ]}
+                onPress={() => handleDayChange(day)}
+              >
+                <ThemedText
+                  style={[
+                    styles.dayChipText,
+                    selected && styles.dayChipTextSelected,
+                  ]}
+                >
+                  {DAYS_OF_WEEK_SHORT[index]}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </ThemedView>
+      </ThemedView>
+
       <ThemedView style={styles.exercisesSection}>
         <ThemedView style={styles.exercisesHeader}>
           <ThemedText type="subtitle">
@@ -287,6 +338,28 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: "top",
+  },
+  dayRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  dayChip: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  dayChipSelected: {
+    backgroundColor: "rgba(74, 144, 226, 1)",
+    borderColor: "rgba(74, 144, 226, 1)",
+  },
+  dayChipText: {
+    fontSize: 14,
+  },
+  dayChipTextSelected: {
+    color: "white",
+    fontWeight: "600",
   },
   exercisesSection: {
     gap: 16,

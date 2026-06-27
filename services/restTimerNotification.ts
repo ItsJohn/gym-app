@@ -1,63 +1,77 @@
 import { Platform } from "react-native";
-import notifee, {
-  AlarmType,
-  AndroidImportance,
-  AndroidVisibility,
-  AuthorizationStatus,
-  TriggerType,
-} from "@notifee/react-native";
+import * as Notifications from "expo-notifications";
 
 const COUNTDOWN_CHANNEL_ID = "rest-timer";
 const DONE_CHANNEL_ID = "rest-timer-done";
-const COUNTDOWN_ID = "rest-timer";
-const DONE_ID = "rest-timer-done";
 
 const isAndroid = Platform.OS === "android";
 
 let channelsReady = false;
+let handlerReady = false;
+let countdownId: string | null = null;
+let doneId: string | null = null;
 
-async function ensureChannels() {
-  if (channelsReady) return;
-  await notifee.createChannel({
-    id: COUNTDOWN_CHANNEL_ID,
-    name: "Rest Timer",
-    importance: AndroidImportance.LOW,
-    visibility: AndroidVisibility.PUBLIC,
-    vibration: false,
+function ensureForegroundHandler(): void {
+  if (handlerReady) return;
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
   });
-  await notifee.createChannel({
-    id: DONE_CHANNEL_ID,
+  handlerReady = true;
+}
+
+async function ensureChannels(): Promise<void> {
+  if (!isAndroid || channelsReady) return;
+  await Notifications.setNotificationChannelAsync(COUNTDOWN_CHANNEL_ID, {
+    name: "Rest Timer",
+    importance: Notifications.AndroidImportance.LOW,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    sound: null,
+  });
+  await Notifications.setNotificationChannelAsync(DONE_CHANNEL_ID, {
     name: "Rest Complete",
-    importance: AndroidImportance.HIGH,
-    visibility: AndroidVisibility.PUBLIC,
-    vibration: true,
+    importance: Notifications.AndroidImportance.HIGH,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
   });
   channelsReady = true;
 }
 
 /**
- * Prepares the notification channels. Safe to call repeatedly; only the first
- * call has any effect. No-op off Android.
+ * Prepares the notification channels and foreground handler. Safe to call
+ * repeatedly; only the first call has any effect.
  */
 export async function initRestTimerNotifications(): Promise<void> {
-  if (!isAndroid) return;
+  ensureForegroundHandler();
   await ensureChannels();
 }
 
 /**
- * Requests notification permission (Android 13+). Returns true if granted.
+ * Requests notification permission. Returns true if granted.
  */
 export async function requestRestTimerPermission(): Promise<boolean> {
-  if (!isAndroid) return false;
-  const settings = await notifee.requestPermission();
-  return settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED;
+  const { status } = await Notifications.requestPermissionsAsync();
+  return status === "granted";
+}
+
+function dateTrigger(
+  date: number,
+  channelId: string,
+): Notifications.DateTriggerInput {
+  return {
+    type: Notifications.SchedulableTriggerInputTypes.DATE,
+    date,
+    ...(isAndroid ? { channelId } : {}),
+  };
 }
 
 /**
- * Shows an ongoing chronometer notification counting down to `endTime`, and
- * schedules a one-shot alert for when the timer finishes. Android renders the
- * countdown itself, so it keeps ticking and the completion alert fires even
- * while the app is backgrounded or closed — no foreground service required.
+ * Shows a notification that the rest period is active and schedules a
+ * completion alert for when the timer finishes. Replaces any timer already
+ * running. The completion alert fires even while the app is backgrounded.
  *
  * @param endTime - epoch milliseconds when the timer finishes
  * @param label - short description shown in the notification body
@@ -66,51 +80,34 @@ export async function showRestTimerNotification(
   endTime: number,
   label: string,
 ): Promise<void> {
-  if (!isAndroid) return;
+  ensureForegroundHandler();
   await ensureChannels();
+  await cancelRestTimerNotification();
 
-  await notifee.displayNotification({
-    id: COUNTDOWN_ID,
-    title: "Rest timer",
-    body: label,
-    android: {
-      channelId: COUNTDOWN_CHANNEL_ID,
-      ongoing: true,
-      onlyAlertOnce: true,
-      smallIcon: "ic_launcher",
-      showChronometer: true,
-      chronometerDirection: "down",
-      timestamp: endTime,
-      pressAction: { id: "default", launchActivity: "default" },
-    },
+  countdownId = await Notifications.scheduleNotificationAsync({
+    content: { title: "Rest timer", body: label },
+    trigger: dateTrigger(Date.now() + 1, COUNTDOWN_CHANNEL_ID),
   });
 
   if (endTime <= Date.now()) return;
 
-  await notifee.createTriggerNotification(
-    {
-      id: DONE_ID,
-      title: "Rest complete",
-      body: "Time for your next set",
-      android: {
-        channelId: DONE_CHANNEL_ID,
-        smallIcon: "ic_launcher",
-        pressAction: { id: "default", launchActivity: "default" },
-      },
-    },
-    {
-      type: TriggerType.TIMESTAMP,
-      timestamp: endTime,
-      alarmManager: { type: AlarmType.SET_AND_ALLOW_WHILE_IDLE },
-    },
-  );
+  doneId = await Notifications.scheduleNotificationAsync({
+    content: { title: "Rest complete", body: "Time for your next set" },
+    trigger: dateTrigger(endTime, DONE_CHANNEL_ID),
+  });
 }
 
 /**
- * Removes the countdown notification and cancels the pending completion alert.
+ * Cancels the rest notification and the pending completion alert.
  */
 export async function cancelRestTimerNotification(): Promise<void> {
-  if (!isAndroid) return;
-  await notifee.cancelNotification(COUNTDOWN_ID);
-  await notifee.cancelNotification(DONE_ID);
+  if (countdownId) {
+    await Notifications.cancelScheduledNotificationAsync(countdownId);
+    await Notifications.dismissNotificationAsync(countdownId).catch(() => {});
+    countdownId = null;
+  }
+  if (doneId) {
+    await Notifications.cancelScheduledNotificationAsync(doneId);
+    doneId = null;
+  }
 }

@@ -34,6 +34,16 @@ export const initializeDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
       }
     }
 
+    // Mirror legacy/AI-assigned workout days into workout_schedules so the
+    // home surfaces (today/next/This Week) have a populated source of truth.
+    try {
+      const { WorkoutScheduleService } =
+        await import("./services/workoutScheduleService");
+      await WorkoutScheduleService.backfillFromWorkoutDays();
+    } catch (backfillError) {
+      console.error("Error backfilling workout schedules:", backfillError);
+    }
+
     console.log("Database initialized successfully");
     return db;
   } catch (error) {

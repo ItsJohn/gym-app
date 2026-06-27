@@ -1,6 +1,7 @@
 import { Exercise, Workout } from "@/validation/schemas";
 import { executeQuery, getAllRows, getFirstRow } from "../database";
 import { WorkoutWithExercises } from "../types";
+import { WorkoutScheduleService } from "./workoutScheduleService";
 
 // Helper function to convert is_active from number to boolean
 const convertWorkoutToBoolean = (workout: any): Workout => ({
@@ -27,6 +28,10 @@ export class WorkoutService {
         workout.ai_time_available ?? null,
         workout.ai_training_days ?? null,
       ],
+    );
+    await WorkoutScheduleService.syncWorkoutDay(
+      result.lastInsertRowId,
+      workout.day_of_week,
     );
     return result.lastInsertRowId;
   }
@@ -88,6 +93,10 @@ export class WorkoutService {
       `UPDATE workouts SET ${setParts.join(", ")} WHERE id = ?`,
       values,
     );
+
+    if (updates.day_of_week !== undefined) {
+      await WorkoutScheduleService.syncWorkoutDay(id, updates.day_of_week);
+    }
   }
 
   static async deleteWorkout(id: number): Promise<void> {
