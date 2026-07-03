@@ -6,6 +6,7 @@ import GymLogo from "@/components/GymLogo";
 import {
   HomeHeader,
   NextWorkout,
+  ProgressAnalysisCard,
   QuickStats,
   RecentActivity,
   WorkoutRenewalBanner,
@@ -113,6 +114,8 @@ export default function HomeScreen() {
         recentSession={recentSession}
         onViewHistory={handleViewHistory}
       />
+
+      <ProgressAnalysisCard />
 
       <SchedulePreview onViewAllPress={handleManageWorkouts} />
     </ParallaxScrollView>

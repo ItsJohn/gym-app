@@ -248,6 +248,55 @@ describe("GeminiService", () => {
     });
   });
 
+  describe("analyzeProgress", () => {
+    const validAnalysis = {
+      onTrack: "on-track",
+      score: 72,
+      summary: "Solid consistency across lifting and running.",
+      strengths: ["Regular gym sessions"],
+      concerns: ["Run volume dropped"],
+      suggestions: ["Add one easy run"],
+    };
+
+    const input = {
+      goal: "Run a sub-2h half marathon",
+      gymSessions: [
+        {
+          started_at: "2026-07-01",
+          total_sets: 12,
+          total_exercises: 4,
+          total_weight: 2000,
+          total_reps: 96,
+        },
+      ],
+      runs: [] as any[],
+    };
+
+    it("should return validated structured analysis", async () => {
+      mockGenerateContent.mockResolvedValue(
+        createMockJsonResponse(validAnalysis),
+      );
+
+      const result = await GeminiService.analyzeProgress(input);
+
+      expect(result).toMatchObject(validAnalysis);
+      expect(mockGenerateContent).toHaveBeenCalledWith(
+        expect.stringContaining("Run a sub-2h half marathon"),
+      );
+    });
+
+    it("should throw on invalid analysis shape", async () => {
+      mockGenerateContent.mockResolvedValue(
+        createMockJsonResponse({ ...validAnalysis, onTrack: "sideways" }),
+      );
+
+      await expectErrorThrown(
+        GeminiService.analyzeProgress(input),
+        "Invalid analysis response",
+      );
+    });
+  });
+
   describe("Input validation", () => {
     it("should validate correct workout goals", async () => {
       const validGoals = createMockWorkoutGoals({

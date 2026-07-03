@@ -26,6 +26,7 @@ jest.mock("@/components/home", () => ({
   NextWorkout: () => <div data-testid="next-workout" />,
   QuickStats: () => <div data-testid="quick-stats" />,
   RecentActivity: () => <div data-testid="recent-activity" />,
+  ProgressAnalysisCard: () => <div data-testid="progress-analysis" />,
   WorkoutRenewalBanner: () => <div data-testid="renewal-banner" />,
 }));
 jest.mock("@/components/home/ContinueWorkoutButton", () => () => (

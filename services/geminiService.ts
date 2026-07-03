@@ -1,11 +1,29 @@
 import {
+  validateWorkoutAnalysis,
   validateWorkoutArray,
   validateWorkoutGoals,
   Workout,
+  WorkoutAnalysis,
   WorkoutGoals,
 } from "@/validation/schemas";
+import { RunSession } from "@/database/types";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { YouTubeVerificationService } from "./youtubeVerificationService";
+
+export interface GymSessionSummary {
+  started_at: string;
+  title?: string;
+  total_sets: number;
+  total_exercises: number;
+  total_weight: number;
+  total_reps: number;
+}
+
+export interface ProgressAnalysisInput {
+  goal: string;
+  gymSessions: GymSessionSummary[];
+  runs: RunSession[];
+}
 
 // You'll need to add your Gemini API key to your environment
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
@@ -102,6 +120,88 @@ export class GeminiService {
           : "Failed to generate workout program. Please try again.",
       );
     }
+  }
+
+  static async analyzeProgress(
+    input: ProgressAnalysisInput,
+  ): Promise<WorkoutAnalysis> {
+    if (!API_KEY) {
+      throw new Error("Gemini API key not configured");
+    }
+
+    const prompt = this.buildAnalysisPrompt(input);
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const cleanedText = this.removeAIResponseFormatting(
+        result.response.text(),
+      );
+
+      const validation = validateWorkoutAnalysis(JSON.parse(cleanedText));
+      if (!validation.success) {
+        throw new Error(
+          `Invalid analysis response: ${validation.error.message}`,
+        );
+      }
+      return validation.data;
+    } catch (error) {
+      console.error("Error analyzing progress with Gemini:", error);
+      if (error instanceof SyntaxError) {
+        throw new Error("AI returned invalid JSON. Please try again.");
+      }
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "Failed to analyze progress. Please try again.",
+      );
+    }
+  }
+
+  private static buildAnalysisPrompt(input: ProgressAnalysisInput): string {
+    const gymLines = input.gymSessions.length
+      ? input.gymSessions
+          .map(
+            (s) =>
+              `- ${s.started_at}${s.title ? ` "${s.title}"` : ""}: ${s.total_exercises} exercises, ${s.total_sets} sets, ${s.total_reps} reps, ${s.total_weight} total weight`,
+          )
+          .join("\n")
+      : "No recent gym sessions.";
+
+    const runLines = input.runs.length
+      ? input.runs
+          .map((r) => {
+            const km = (r.distance_m / 1000).toFixed(2);
+            const pace = r.avg_pace_secs_per_km
+              ? `${Math.floor(r.avg_pace_secs_per_km / 60)}:${String(Math.round(r.avg_pace_secs_per_km % 60)).padStart(2, "0")}/km`
+              : "n/a";
+            const hr = r.avg_hr ? `${r.avg_hr} bpm avg HR` : "no HR";
+            return `- ${r.started_at}: ${km} km, ${pace}, ${hr}`;
+          })
+          .join("\n")
+      : "No recent runs.";
+
+    return `You are an expert strength and endurance coach. Analyse the athlete's recent training against their goal and return honest, specific, encouraging feedback.
+
+GOAL: ${input.goal}
+
+RECENT GYM SESSIONS (most recent first):
+${gymLines}
+
+RECENT RUNS (most recent first):
+${runLines}
+
+Assess consistency, volume/intensity trends, balance between running and lifting, and how well the training supports the goal.
+
+Return ONLY valid JSON matching exactly this shape — no markdown, no extra text:
+{
+  "onTrack": "ahead" | "on-track" | "behind" | "unclear",
+  "score": <integer 0-100 reflecting progress toward the goal>,
+  "summary": "<2-3 sentence overview>",
+  "strengths": ["<short point>", ...],
+  "concerns": ["<short point>", ...],
+  "suggestions": ["<short actionable point>", ...]
+}
+Keep each list to 2-4 concise items. Use "unclear" and an empty relevant list if there is not enough data.`;
   }
 
   private static buildWorkoutPrompt(goals: WorkoutGoals): string {

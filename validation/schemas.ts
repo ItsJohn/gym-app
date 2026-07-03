@@ -127,8 +127,19 @@ export const SettingsSchema = z.object({
   theme: z.enum(["light", "dark", "auto"]),
 });
 
+// Progress analysis produced by the AI analyser (gym sessions + Strava runs vs goal)
+export const WorkoutAnalysisSchema = z.object({
+  onTrack: z.enum(["ahead", "on-track", "behind", "unclear"]),
+  score: z.number().min(0).max(100),
+  summary: z.string().trim(),
+  strengths: z.array(z.string().trim()),
+  concerns: z.array(z.string().trim()),
+  suggestions: z.array(z.string().trim()),
+});
+
 // Type exports - unified types
 export type WorkoutGoals = z.infer<typeof WorkoutGoalsSchema>;
+export type WorkoutAnalysis = z.infer<typeof WorkoutAnalysisSchema>;
 export type Exercise = z.infer<typeof ExerciseSchema>;
 export type Workout = z.infer<typeof WorkoutSchema>;
 export type WorkoutArray = z.infer<typeof WorkoutArraySchema>;
@@ -174,4 +185,8 @@ export const validateSetInput = (data: unknown) => {
 
 export const validateSettings = (data: unknown) => {
   return SettingsSchema.safeParse(data);
+};
+
+export const validateWorkoutAnalysis = (data: unknown) => {
+  return WorkoutAnalysisSchema.safeParse(data);
 };
