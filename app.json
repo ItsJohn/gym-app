@@ -62,8 +62,7 @@
       "expo-font",
       "expo-web-browser",
       "expo-image",
-      "expo-status-bar",
-      "expo-notifications"
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true
