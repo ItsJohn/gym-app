@@ -41,7 +41,7 @@ export function ProgramEditor({
     (workout: Workout): string | null => {
       const workoutValidation = validateWorkout(workout);
       if (!workoutValidation.success) {
-        const errorMessages = workoutValidation.error.errors
+        const errorMessages = workoutValidation.error.issues
           .map((err) => {
             const path = err.path.join(".");
             return `${path}: ${err.message}`;
@@ -56,7 +56,7 @@ export function ProgramEditor({
         const exerciseValidation = validateExercise(exercise);
 
         if (!exerciseValidation.success) {
-          const errorMessages = exerciseValidation.error.errors
+          const errorMessages = exerciseValidation.error.issues
             .map((err) => err.message)
             .join(", ");
           return `Exercise "${exercise.name}" in workout "${workout.title}": ${errorMessages}`;

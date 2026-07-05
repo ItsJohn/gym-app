@@ -136,7 +136,7 @@ export function useWorkoutEditor() {
     (workoutData: Workout): string | undefined => {
       const workoutValidation = validateWorkout(workoutData);
       if (!workoutValidation.success) {
-        const errorMessages = workoutValidation.error.errors
+        const errorMessages = workoutValidation.error.issues
           .map((err) => {
             const path = err.path.join(".");
             return `${path}: ${err.message}`;
@@ -149,7 +149,7 @@ export function useWorkoutEditor() {
         const exercise = workoutData.exercises[i];
         const exerciseValidation = validateExercise(exercise);
         if (!exerciseValidation.success) {
-          const errorMessages = exerciseValidation.error.errors
+          const errorMessages = exerciseValidation.error.issues
             .map((err) => err.message)
             .join(", ");
           return `Exercise "${exercise.name}" (${i + 1}): ${errorMessages}`;
