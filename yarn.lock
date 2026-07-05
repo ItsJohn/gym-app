@@ -4759,10 +4759,10 @@ expo-splash-screen@~56.0.10:
     "@expo/image-utils" "^0.10.1"
     xml2js "0.6.0"
 
-expo-sqlite@~56.0.5:
-  version "56.0.5"
-  resolved "https://registry.yarnpkg.com/expo-sqlite/-/expo-sqlite-56.0.5.tgz#7967bcf7481d3bb5316116c73200a7e01a5c5cf6"
-  integrity sha512-wHYRVLS5nUFEtli45wHaO+RjlRY8sQXyOSgENVk6I4zq7+FgySqjOk3YOYW6IKIMwhj5XzjMJO+pY8xKUy73Kw==
+expo-sqlite@~57.0.0:
+  version "57.0.0"
+  resolved "https://registry.yarnpkg.com/expo-sqlite/-/expo-sqlite-57.0.0.tgz#016c6c515d5aa01739e7e5c24cf0f1f072f9ca87"
+  integrity sha512-BYTaLjO9+CMaEYIp5fdrO0RGTkaumZrNuDSQgFkeZe1MfKeDjiS1myg66jxJviWaqpycLq7QnRT11+bdO23JHQ==
   dependencies:
     await-lock "^2.2.2"
 
