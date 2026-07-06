@@ -100,7 +100,7 @@ export default function AIWorkoutCreator({
       const validationResult = validateWorkoutGoals(workoutGoalsData);
 
       if (!validationResult.success) {
-        const errorMessages = validationResult.error.errors
+        const errorMessages = validationResult.error.issues
           .map((err) => err.message)
           .join("\n");
         Alert.alert("Invalid Input", errorMessages);

@@ -45,7 +45,7 @@ export class GeminiService {
     const validationResult = validateWorkoutGoals(goals);
 
     if (!validationResult.success) {
-      const errorMessages = validationResult.error.errors
+      const errorMessages = validationResult.error.issues
         .map((err) => err.message)
         .join(", ");
       throw new Error(`Invalid workout goals: ${errorMessages}`);
