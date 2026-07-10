@@ -70,7 +70,7 @@
     "jest": "~29.7.0",
     "jest-environment-jsdom": "^30.4.1",
     "lint-staged": "^17.0.8",
-    "prettier": "^3.9.4",
+    "prettier": "^3.9.5",
     "ts-jest": "^29.4.11",
     "typescript": "~6.0.3"
   },
