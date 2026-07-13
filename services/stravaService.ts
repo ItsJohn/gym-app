@@ -19,6 +19,52 @@ interface TokenResponse {
   athlete: { id: number; firstname: string; lastname: string };
 }
 
+interface StravaErrorBody {
+  message?: string;
+  errors?: { resource?: string; field?: string; code?: string }[];
+}
+
+export class StravaApiError extends Error {
+  constructor(
+    readonly action: string,
+    readonly status: number,
+    readonly detail: string,
+  ) {
+    super(
+      detail
+        ? `${action} failed (Strava ${status}): ${detail}`
+        : `${action} failed (Strava ${status})`,
+    );
+    this.name = "StravaApiError";
+  }
+}
+
+async function stravaError(
+  action: string,
+  response: Response,
+): Promise<StravaApiError> {
+  let detail = "";
+  try {
+    const body = (await response.json()) as StravaErrorBody;
+    const fields = (body.errors ?? [])
+      .map((e) => [e.resource, e.field, e.code].filter(Boolean).join("."))
+      .filter(Boolean)
+      .join(", ");
+    detail = [body.message, fields].filter(Boolean).join(" — ");
+  } catch {
+    detail = response.statusText ?? "";
+  }
+
+  if (response.status === 429) {
+    const usage = response.headers?.get?.("x-ratelimit-usage");
+    detail = ["Rate limit exceeded", usage && `usage ${usage}`, detail]
+      .filter(Boolean)
+      .join(" — ");
+  }
+
+  return new StravaApiError(action, response.status, detail);
+}
+
 export class StravaService {
   static async connect(): Promise<boolean> {
     if (!CLIENT_ID) {
@@ -78,7 +124,7 @@ export class StravaService {
         grant_type: "authorization_code",
       }),
     });
-    if (!response.ok) throw new Error("Failed to exchange Strava auth code");
+    if (!response.ok) throw await stravaError("Auth code exchange", response);
     return response.json();
   }
 
@@ -98,7 +144,7 @@ export class StravaService {
         grant_type: "refresh_token",
       }),
     });
-    if (!response.ok) throw new Error("Failed to refresh Strava token");
+    if (!response.ok) throw await stravaError("Token refresh", response);
 
     const tokens: TokenResponse = await response.json();
     await this.saveTokens(tokens);
@@ -160,7 +206,9 @@ export class StravaService {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch Strava activities");
+      if (!response.ok) {
+        throw await stravaError(`Fetch activities (page ${page})`, response);
+      }
 
       const activities: StravaActivity[] = await response.json();
       if (activities.length === 0) break;
@@ -207,7 +255,9 @@ export class StravaService {
       `https://www.strava.com/api/v3/activities/${activityId}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
-    if (!response.ok) throw new Error(`Failed to fetch activity ${activityId}`);
+    if (!response.ok) {
+      throw await stravaError(`Fetch activity ${activityId}`, response);
+    }
     return response.json();
   }
 
