@@ -167,7 +167,12 @@ Custom hooks are split into two categories:
 Required in `.env.local`:
 ```
 EXPO_PUBLIC_GEMINI_API_KEY=your_key_here
+EXPO_PUBLIC_ROLLBAR_TOKEN=your_rollbar_post_client_item_token
 ```
+
+`EXPO_PUBLIC_ROLLBAR_TOKEN` must be a Rollbar **post_client_item** token. Error
+reporting is a silent no-op when it is unset, so it must also be set as a
+visible (non-secret) EAS environment variable for release builds to report.
 
 ## CI/CD
 

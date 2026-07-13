@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import "react-native-reanimated";
 
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { WorkoutTimerProvider } from "@/contexts/WorkoutTimerContext";
 import { initializeDatabase } from "@/database/database";
@@ -15,6 +16,9 @@ import {
   initRestTimerNotifications,
   requestRestTimerPermission,
 } from "@/services/restTimerNotification";
+import { initRollbar, rollbar } from "@/services/rollbarService";
+
+initRollbar();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +44,10 @@ export default function RootLayout() {
         setDbInitialized(true);
       } catch (error) {
         console.error("Failed to initialize database:", error);
+        rollbar.error(
+          error instanceof Error ? error : new Error(String(error)),
+          { phase: "database-init" },
+        );
         setDbError(
           error instanceof Error
             ? error.message
@@ -104,30 +112,35 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SettingsProvider>
-        <WorkoutTimerProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="workout" options={{ headerShown: false }} />
-              <Stack.Screen name="run/[id]" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="workout-editor"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="workout-preview"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </WorkoutTimerProvider>
-      </SettingsProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <SettingsProvider>
+          <WorkoutTimerProvider>
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="workout" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="run/[id]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="workout-editor"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="workout-preview"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </WorkoutTimerProvider>
+        </SettingsProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
