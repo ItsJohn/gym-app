@@ -33,6 +33,9 @@ jest.mock("@/components/settings/SettingSwitch", () => ({ title }: any) => (
 jest.mock("@/components/settings/StravaConnect", () => () => (
   <div data-testid="strava-connect" />
 ));
+jest.mock("@/components/settings/ExportData", () => () => (
+  <div data-testid="export-data" />
+));
 jest.mock("expo-router", () => ({
   router: { push: jest.fn() },
 }));

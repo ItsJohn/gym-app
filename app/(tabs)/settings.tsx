@@ -4,6 +4,7 @@ import SettingItem from "@/components/settings/SettingItem";
 import SettingSection from "@/components/settings/SettingSection";
 import SettingSwitch from "@/components/settings/SettingSwitch";
 import StravaConnect from "@/components/settings/StravaConnect";
+import ExportData from "@/components/settings/ExportData";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -43,6 +44,10 @@ export default function SettingsScreen() {
       >
         <SettingSection title="Strava Integration">
           <StravaConnect />
+        </SettingSection>
+
+        <SettingSection title="Data & Export">
+          <ExportData />
         </SettingSection>
 
         <SettingSection title="Workout Preferences">
