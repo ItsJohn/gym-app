@@ -249,6 +249,23 @@ export function toMarkdown(exp: FitnessExport): string {
   return lines.join("\n");
 }
 
+// The file shared to a Claude Project: the human-readable summary followed by
+// the exact structured data as a JSON block, so a single upload gives Claude
+// both a readable overview and precise numbers to compute against.
+export function toExportText(exp: FitnessExport): string {
+  return [
+    toMarkdown(exp),
+    "## Raw data (JSON)",
+    "",
+    "Structured version of everything above — use it for exact calculations.",
+    "",
+    "```json",
+    JSON.stringify(exp, null, 2),
+    "```",
+    "",
+  ].join("\n");
+}
+
 async function gatherFitnessData(
   weeks: number,
   now: Date,
@@ -306,25 +323,28 @@ export class FitnessExportService {
     return buildFitnessExport(data, { weeks, rangeStart, rangeEnd: now });
   }
 
-  // Writes the export to a Markdown + JSON file and opens the share sheet so
-  // the user can drop it into a Claude Project. Returns the number of sessions
-  // and runs included. Sharing is unavailable on web (no-op after write).
+  // Writes the export to a plain-text file and opens the share sheet so the
+  // user can drop it into a Claude Project. Plain text (text/plain) is chosen
+  // over Markdown so Android and the Claude uploader can open it directly; the
+  // content is still Markdown-formatted with an embedded JSON block. Returns
+  // the number of sessions and runs included. Sharing is unavailable on web
+  // (no-op after write).
   static async exportAndShare(
     weeks = EXPORT_WEEKS,
   ): Promise<{ strengthSessions: number; runs: number }> {
     const exp = await this.buildExport(weeks);
     const stamp = exp.range_end.slice(0, 10);
 
-    const markdownFile = new File(Paths.cache, `fitness-export-${stamp}.md`);
-    if (markdownFile.exists) markdownFile.delete();
-    markdownFile.create();
-    markdownFile.write(toMarkdown(exp));
+    const file = new File(Paths.cache, `fitness-export-${stamp}.txt`);
+    if (file.exists) file.delete();
+    file.create();
+    file.write(toExportText(exp));
 
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(markdownFile.uri, {
-        mimeType: "text/markdown",
+      await Sharing.shareAsync(file.uri, {
+        mimeType: "text/plain",
         dialogTitle: "Export fitness data",
-        UTI: "net.daringfireball.markdown",
+        UTI: "public.plain-text",
       });
     }
 

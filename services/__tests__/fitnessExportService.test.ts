@@ -2,6 +2,7 @@ import {
   shapeFitnessData,
   buildFitnessExport,
   toMarkdown,
+  toExportText,
 } from "@/services/fitnessExportService";
 
 describe("fitnessExportService", () => {
@@ -59,5 +60,18 @@ describe("fitnessExportService", () => {
     expect(md).toContain("**Bench Press** (Chest): 60kg × 8 reps");
     expect(md).toContain("Morning Run");
     expect(md).toContain("5:00/km");
+  });
+
+  it("embeds a parseable JSON block after the summary", () => {
+    const data = shapeFitnessData(sessions, sets, runs);
+    const exp = buildFitnessExport(data, {
+      weeks: 10,
+      rangeStart: new Date("2026-05-11T00:00:00.000Z"),
+      rangeEnd: new Date("2026-07-20T00:00:00.000Z"),
+    });
+
+    const text = toExportText(exp);
+    const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+    expect(JSON.parse(json).summary.runs).toBe(1);
   });
 });
