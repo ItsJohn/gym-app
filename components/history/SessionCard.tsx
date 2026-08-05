@@ -1,10 +1,14 @@
-import { Alert, Modal, StyleSheet, TouchableOpacity } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import { Alert, StyleSheet, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useSettings } from "@/contexts/SettingsContext";
 import { useDeleteSession, useWorkout } from "@/hooks";
+import { SessionTextService } from "@/services/sessionTextService";
 import { Session } from "@/validation/session";
 import { useState } from "react";
+import { SessionCardMenu } from "./SessionCardMenu";
 
 interface SessionWithTitle extends Session {
   workout_title?: string;
@@ -49,7 +53,25 @@ const formatDuration = (startTime: string, endTime?: string) => {
 export function SessionCard({ session, onPress }: SessionCardProps) {
   const { data: workout } = useWorkout(session.workout_id);
   const deleteSessionMutation = useDeleteSession();
+  const { settings } = useSettings();
   const [showMenu, setShowMenu] = useState(false);
+
+  const handleCopy = async () => {
+    if (!session.id) return;
+
+    try {
+      const text = await SessionTextService.buildSessionText(
+        session.id,
+        settings.weightUnit,
+      );
+      await Clipboard.setStringAsync(text);
+      setShowMenu(false);
+      Alert.alert("Copied", "Workout details copied to your clipboard.");
+    } catch (err) {
+      console.error("Error copying session:", err);
+      Alert.alert("Error", "Failed to copy workout details");
+    }
+  };
 
   const handleDelete = () => {
     if (!session.id) return;
@@ -172,31 +194,12 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
         </ThemedView>
       </TouchableOpacity>
 
-      {/* Menu Modal */}
-      <Modal
+      <SessionCardMenu
         visible={showMenu}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCloseMenu}
-      >
-        <TouchableOpacity
-          style={styles.menuOverlay}
-          activeOpacity={1}
-          onPress={handleCloseMenu}
-        >
-          <ThemedView style={styles.menuContainer}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleDelete}
-              activeOpacity={0.7}
-            >
-              <ThemedText style={styles.menuItemText}>
-                🗑️ Delete Session
-              </ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-        </TouchableOpacity>
-      </Modal>
+        onClose={handleCloseMenu}
+        onCopy={handleCopy}
+        onDelete={handleDelete}
+      />
     </>
   );
 }
@@ -334,37 +337,5 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, 0.7)",
     fontStyle: "italic",
     lineHeight: 20,
-  },
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  menuContainer: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 8,
-    minWidth: 200,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  menuItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: "#D32F2F",
-    fontWeight: "500",
   },
 });
