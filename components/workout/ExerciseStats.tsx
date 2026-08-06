@@ -2,9 +2,11 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
-import { WeightProgressionChart } from "@/components/analytics";
-import { useExerciseStats } from "@/hooks/useExerciseStats";
-import { useWeightProgression } from "@/hooks/useAnalyticsData";
+import { WeightProgressionChart } from "@/components/workout/WeightProgressionChart";
+import {
+  useExerciseStats,
+  useWeightProgression,
+} from "@/hooks/useExerciseStats";
 
 interface ExerciseStatsProps {
   exerciseId: string;

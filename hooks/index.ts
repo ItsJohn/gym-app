@@ -165,7 +165,7 @@ export { useSessionSetStats } from "./useSessionSetStats";
 export * from "./service";
 
 export { useLastSessionDataForExercise } from "./service/session";
-export { useExerciseStats } from "./useExerciseStats";
+export { useExerciseStats, useWeightProgression } from "./useExerciseStats";
 export { useLatestWorkoutStats } from "./useLatestWorkoutStats";
 export { useWorkoutRenewalNotice } from "./useWorkoutRenewalNotice";
 export { useProgressAnalysis } from "./useProgressAnalysis";

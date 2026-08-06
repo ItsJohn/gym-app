@@ -24,7 +24,7 @@ npm run format     # Prettier
 
 ```
 app/                    # Expo Router screens (file-based routing)
-  (tabs)/               # Tab navigation (home, workouts, history, analytics, settings)
+  (tabs)/               # Tab navigation (home, workouts, history, settings)
   workout.tsx           # Active workout session screen
   workout-editor.tsx    # Workout creation/editing screen
   workout-preview.tsx   # Workout preview screen
@@ -35,7 +35,6 @@ components/             # React components (organized by feature)
   workout-editor/       # Workout creation components (AI + manual)
   workout-preview/      # Workout preview components
   history/              # History screen components
-  analytics/            # Charts (PR, weight progression, frequency)
   settings/             # Settings screen components
   landing/              # Landing/empty state components
 database/
@@ -142,11 +141,11 @@ One service per entity in `database/services/`:
 Custom hooks are split into two categories:
 
 **Feature hooks** (`hooks/`): Screen-level data and logic
-- `useHomeData`, `useHistoryData`, `useAnalyticsData` - Screen data aggregation
+- `useHomeData`, `useHistoryData` - Screen data aggregation
 - `useWorkoutSession` - Active workout session management
 - `useWorkoutEditor` - Workout editor logic
 - `useRestTimer`, `useCountdown` - Timer hooks
-- `useExerciseStats`, `useSessionSetStats` - Statistics
+- `useExerciseStats`, `useWeightProgression`, `useSessionSetStats` - Statistics
 - `useTodaysWorkoutCompletion`, `useWorkoutRenewalNotice` - Scheduling logic
 
 **Service hooks** (`hooks/service/`): React Query wrappers around DB services

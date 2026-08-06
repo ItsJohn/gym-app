@@ -14,7 +14,7 @@ jest.mock("@/components/ThemedText", () => ({
   ThemedText: ({ children }: any) => <span>{children}</span>,
 }));
 
-jest.mock("@/components/analytics", () => ({
+jest.mock("@/components/workout/WeightProgressionChart", () => ({
   WeightProgressionChart: () => <div data-testid="weight-progression-chart" />,
 }));
 
@@ -23,9 +23,6 @@ const mockUseWeightProgression = jest.fn();
 
 jest.mock("@/hooks/useExerciseStats", () => ({
   useExerciseStats: (...args: any[]) => mockUseExerciseStats(...args),
-}));
-
-jest.mock("@/hooks/useAnalyticsData", () => ({
   useWeightProgression: (...args: any[]) => mockUseWeightProgression(...args),
 }));
 

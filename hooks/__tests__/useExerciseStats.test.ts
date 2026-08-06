@@ -2,14 +2,16 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-import { useExerciseStats } from "../useExerciseStats";
+import { useExerciseStats, useWeightProgression } from "../useExerciseStats";
 import * as database from "@/database/database";
 
 jest.mock("@/database/database", () => ({
   getFirstRow: jest.fn(),
+  getAllRows: jest.fn(),
 }));
 
 const mockGetFirstRow = database.getFirstRow as jest.Mock;
+const mockGetAllRows = database.getAllRows as jest.Mock;
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -157,5 +159,56 @@ describe("useExerciseStats", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.averageWeight).toBeNull();
+  });
+});
+
+describe("useWeightProgression", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return weight progression data for an exercise", async () => {
+    mockGetAllRows.mockResolvedValueOnce([
+      { weight: 50, reps: "10", completed_at: "2024-01-01T10:00:00Z" },
+      { weight: 55, reps: "8", completed_at: "2024-01-08T10:00:00Z" },
+    ]);
+
+    const { result } = renderHook(() => useWeightProgression("Squat"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toHaveLength(2);
+    expect(result.current.data?.[0].weight).toBe(50);
+    expect(result.current.data?.[0].reps).toBe(10);
+    expect(result.current.data?.[1].weight).toBe(55);
+  });
+
+  it("should filter out entries with zero or null weight", async () => {
+    mockGetAllRows.mockResolvedValueOnce([
+      { weight: 50, reps: "10", completed_at: "2024-01-01T10:00:00Z" },
+      { weight: 0, reps: "10", completed_at: "2024-01-02T10:00:00Z" },
+      { weight: null, reps: "10", completed_at: "2024-01-03T10:00:00Z" },
+    ]);
+
+    const { result } = renderHook(() => useWeightProgression("Squat"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data?.[0].weight).toBe(50);
+  });
+
+  it("should not fetch when exerciseName is empty", () => {
+    const { result } = renderHook(() => useWeightProgression(""), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isFetching).toBe(false);
+    expect(mockGetAllRows).not.toHaveBeenCalled();
   });
 });
