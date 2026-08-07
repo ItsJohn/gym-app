@@ -7,7 +7,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
-import { WeightProgressionPoint } from "@/hooks/useAnalyticsData";
+import { WeightProgressionPoint } from "@/hooks/useExerciseStats";
 
 interface WeightProgressionChartProps {
   data: WeightProgressionPoint[];

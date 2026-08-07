@@ -34,11 +34,11 @@ The app features an intuitive interface for tracking workouts, managing exercise
 - Offline-first design with local SQLite database
 - Cross-platform compatibility (iOS, Android, Web)
 
-### 📈 **Progress Analytics**
-- Weekly and monthly workout statistics
-- Exercise performance tracking
-- Workout completion rates and consistency metrics
-- Visual progress indicators and achievements
+### 📈 **Progress Tracking**
+- Progress analysis card on the home screen
+- Per-exercise stats (PR, average weight, sets completed) during a workout
+- Weight progression chart per exercise
+- Workout history with session details
 
 ## Tech Stack
 
@@ -137,7 +137,7 @@ Strava sync imports your runs automatically each time you open the app.
 ```
 gym-sweat-tears/
 ├── app/                    # Expo Router screens (file-based routing)
-│   ├── (tabs)/            # Tab navigation (home, workouts, history, analytics, settings)
+│   ├── (tabs)/            # Tab navigation (home, workouts, history, settings)
 │   ├── workout.tsx        # Active workout session
 │   ├── workout-editor.tsx # Workout creation/editing
 │   └── workout-preview.tsx # Workout preview before starting
@@ -148,7 +148,6 @@ gym-sweat-tears/
 │   ├── workout-editor/   # Workout creation (AI + manual)
 │   ├── workout-preview/  # Workout preview components
 │   ├── history/          # History screen components
-│   ├── analytics/        # Chart components (PR, weight, frequency)
 │   └── settings/         # Settings screen components
 ├── database/             # SQLite database layer
 │   ├── services/         # CRUD operations per entity
