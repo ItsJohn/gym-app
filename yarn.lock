@@ -2223,10 +2223,10 @@
     picocolors "^1.1.1"
     redent "^3.0.0"
 
-"@testing-library/jest-dom@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@testing-library/jest-dom/-/jest-dom-7.0.0.tgz#1d0d606265c297a3a8f5e31680044fed12b7eec3"
-  integrity sha512-HKAH9C6mBo5yBG6yRO5i43L2iisencAo5z+o5P/saHUoY+miC5ivXRxHBJcFyB5ypPNxHJdK3BoF/3O4DIptMg==
+"@testing-library/jest-dom@^7.0.1":
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/@testing-library/jest-dom/-/jest-dom-7.0.1.tgz#649a9a8b2039f28d29f9f7a46eba9a8b727f811e"
+  integrity sha512-oMDTC3oA+6CXSO2JZnvOI7CA6oVub6kij5ggk9ohwye5slmkwxYDXcPOVxgMw/RQlticjtO0C1RZkR97HgrWMw==
   dependencies:
     "@adobe/css-tools" "^4.4.0"
     aria-query "^5.0.0"
@@ -2369,10 +2369,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@~19.2.17":
-  version "19.2.17"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.17.tgz#dccac365baa0f1734ec270ff4b51c89465e8dc7f"
-  integrity sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==
+"@types/react@*", "@types/react@~19.2.18":
+  version "19.2.18"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.18.tgz#eb0b6a1fb635d1a9692d5f84a3495bd8ad153707"
+  integrity sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==
   dependencies:
     csstype "^3.2.2"
 
@@ -4166,10 +4166,10 @@ escape-string-regexp@^4.0.0:
   resolved "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
 
-eslint-config-expo@~57.0.0:
-  version "57.0.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-expo/-/eslint-config-expo-57.0.0.tgz#409f700e8d605d545be2dad6ae7be37fa98b4fcd"
-  integrity sha512-T7OTN9xrSZYjLw4qTkL1Mn2WfAUVmMGY38+OYAcraI1uiTFVH6jfkSkv84WLTqnneblLcb6AsMDV+SHcUj3hGw==
+eslint-config-expo@~57.0.1:
+  version "57.0.1"
+  resolved "https://registry.yarnpkg.com/eslint-config-expo/-/eslint-config-expo-57.0.1.tgz#b01833ff2079cb33af16e50f9bec0fc7a53b678a"
+  integrity sha512-OsLAReXOF3uXBwyxxw4f55sORYC+lOH4pSaGdU9MnYhRpjqPziK2uCnRxjLTGKeAKER7GSX5Wz9kNMGJT1MZEw==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^8.59.0"
     "@typescript-eslint/parser" "^8.59.0"
@@ -6180,10 +6180,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-lint-staged@^17.2.0:
-  version "17.2.0"
-  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-17.2.0.tgz#b7676a66ea77ae4d24018c12ce9e235ed59b46b8"
-  integrity sha512-FchGnFe4i4B1C/a35SPU9bNGPEHSC1+1iV0plLjzBmKVe9klZrlRfSgK6Cw4VeHyqOXbJUXP0vON61uRftNQ0A==
+lint-staged@^17.3.0:
+  version "17.3.0"
+  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-17.3.0.tgz#f13483b12f11790746e0ec82808ca0614ba80f4b"
+  integrity sha512-woZS3vNe3UKqBaLPvbLOtKRY4tLANpWQhom12MGWqC8Mh1lCOO+WgSwmX2amjJAqTY9BkXYW87fCUH5H9Ph6xw==
   dependencies:
     picomatch "^4.0.5"
     string-argv "^0.3.2"
