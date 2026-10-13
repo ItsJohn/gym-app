@@ -5,6 +5,15 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Versions pinned by the Expo SDK; upgrade with `npx expo install --fix`.
+    ignore:
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@shopify/react-native-skia"
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major"]
     groups:
       production-dependencies:
         dependency-type: production
