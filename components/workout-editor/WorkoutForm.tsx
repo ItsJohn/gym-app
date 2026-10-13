@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Alert, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -7,6 +8,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { DAYS_OF_WEEK, DAYS_OF_WEEK_SHORT } from "@/database/types";
 import { Exercise, Workout } from "@/validation/schemas";
 import { ExerciseCard } from "./ExerciseCard";
+import { ExerciseEditModal } from "./ExerciseEditModal";
 
 interface WorkoutFormProps {
   workout: Workout;
@@ -19,6 +21,7 @@ export function WorkoutForm({
   onWorkoutChange,
   showTitle = true,
 }: WorkoutFormProps) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const placeholderTextColor = useThemeColor({}, "tabIconDefault");
   const textInputBackgroundColor = useThemeColor(
     { light: "rgba(74, 144, 226, 0.05)", dark: "rgba(255, 255, 255, 0.1)" },
@@ -77,103 +80,15 @@ export function WorkoutForm({
     );
   };
 
-  const handleEditExercise = (exerciseIndex: number) => {
-    const exercise = workout.exercises[exerciseIndex];
-
-    Alert.alert("Edit Exercise", `Editing: ${exercise.name}`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Edit Name",
-        onPress: () => {
-          Alert.prompt(
-            "Exercise Name",
-            "Enter new name:",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Save",
-                onPress: (newName: string | undefined) => {
-                  if (newName?.trim()) {
-                    const updatedExercises = workout.exercises.map(
-                      (ex, index) =>
-                        index === exerciseIndex
-                          ? { ...ex, name: newName.trim() }
-                          : ex,
-                    );
-                    onWorkoutChange({
-                      ...workout,
-                      exercises: updatedExercises,
-                    });
-                  }
-                },
-              },
-            ],
-            "plain-text",
-            exercise.name,
-          );
-        },
-      },
-      {
-        text: "Edit Sets/Reps",
-        onPress: () => {
-          const currentSets = exercise.target.sets || "3";
-          const currentReps = exercise.target.reps || "10";
-
-          Alert.prompt(
-            "Sets and Reps",
-            "Enter sets (current: " + currentSets + "):",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Next",
-                onPress: (sets: string | undefined) => {
-                  const setsNum = parseInt(sets || "0");
-                  if (setsNum > 0) {
-                    Alert.prompt(
-                      "Sets and Reps",
-                      "Enter reps (current: " + currentReps + "):",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Save",
-                          onPress: (reps: string | undefined) => {
-                            const repsNum = parseInt(reps || "0");
-                            if (repsNum > 0) {
-                              const updatedExercises = workout.exercises.map(
-                                (ex, index) =>
-                                  index === exerciseIndex
-                                    ? {
-                                        ...ex,
-                                        type: "reps-sets" as const,
-                                        target: {
-                                          ...ex.target,
-                                          sets: setsNum.toString(),
-                                          reps: repsNum.toString(),
-                                        },
-                                      }
-                                    : ex,
-                              );
-                              onWorkoutChange({
-                                ...workout,
-                                exercises: updatedExercises,
-                              });
-                            }
-                          },
-                        },
-                      ],
-                      "plain-text",
-                      currentReps,
-                    );
-                  }
-                },
-              },
-            ],
-            "plain-text",
-            currentSets,
-          );
-        },
-      },
-    ]);
+  const handleSaveExercise = (updated: Exercise) => {
+    if (editingIndex === null) return;
+    onWorkoutChange({
+      ...workout,
+      exercises: workout.exercises.map((ex, index) =>
+        index === editingIndex ? updated : ex,
+      ),
+    });
+    setEditingIndex(null);
   };
 
   const handleDeleteExercise = (exerciseIndex: number) => {
@@ -306,13 +221,21 @@ export function WorkoutForm({
               <ExerciseCard
                 key={`${exercise.id}-${index}`}
                 exercise={exercise}
-                onEdit={() => handleEditExercise(index)}
+                onEdit={() => setEditingIndex(index)}
                 onDelete={() => handleDeleteExercise(index)}
               />
             ))}
           </ThemedView>
         )}
       </ThemedView>
+
+      <ExerciseEditModal
+        exercise={
+          editingIndex === null ? null : workout.exercises[editingIndex]
+        }
+        onSave={handleSaveExercise}
+        onClose={() => setEditingIndex(null)}
+      />
     </ThemedView>
   );
 }
