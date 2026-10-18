@@ -3,7 +3,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { useScrollTimeout } from "@/hooks";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useCallback, useRef, useState } from "react";
-import { Modal, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 
 interface FancySelectProps {
   label: string;
@@ -28,7 +34,7 @@ export default function FancySelect({
   );
 
   const [isOpen, setIsOpen] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
 
   const selectedOption = options.find((option) => option.value === value);
   const displayValue = selectedOption
