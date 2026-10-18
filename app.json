@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "gymsweattears",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.its-john.gymsweattears",
@@ -63,7 +62,8 @@
       "expo-web-browser",
       "expo-image",
       "expo-status-bar",
-      "./plugins/withoutPushEntitlement"
+      "./plugins/withoutPushEntitlement",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

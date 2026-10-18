@@ -91,7 +91,7 @@ export default function WorkoutEditorScreen() {
             <ThemedView style={styles.actions}>
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
-                onPress={router.back}
+                onPress={() => router.back()}
               >
                 <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
               </TouchableOpacity>
